@@ -11,6 +11,13 @@ import com.example.talkeasy.data.entity.User
 @Dao
 interface UserDao {
 
+    @Query("SELECT COUNT(*) FROM user")
+    suspend fun getUserCount(): Int
+
+    @Query("SELECT EXISTS(SELECT 1 FROM user LIMIT 1)")
+    suspend fun hasUser(): Boolean
+
+    // 既存のメソッド
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: User): Long
 

@@ -7,10 +7,10 @@ import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 
 @Entity(
-    tableName = "message",
+    tableName = "messages",
     foreignKeys = [
         ForeignKey(
-            entity = TalksEntity::class,
+            entity = Talks::class,
             parentColumns = ["id"],
             childColumns = ["talkId"],
             onDelete = ForeignKey.CASCADE
@@ -18,7 +18,7 @@ import java.time.LocalDateTime
     ],
     indices = [Index(value = ["talkId"])]
 )
-data class MessagesEntity(
+data class Messages(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val talkId: Int,
     val text: String,

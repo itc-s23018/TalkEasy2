@@ -1,26 +1,21 @@
 package com.example.talkeasy.ui.tab
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.talkeasy.data.viewmodel.TalksViewModel
+import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.screen.TalksScreen
 import com.example.talkeasy.ui.screen.TopScreen
-import java.time.Duration
-import java.time.LocalDateTime
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TabRowScreen(
-    modifier: Modifier = Modifier,
-    initialTabIndex: Int = 0,
-    talksViewModel: TalksViewModel = hiltViewModel()
-) {
+fun TabRowScreen(modifier: Modifier = Modifier, initialTabIndex: Int = 0) {
+    val navController = LocalNavController.current
     var tabIndex by remember { mutableStateOf(initialTabIndex) }
-    val talks by talksViewModel.talks.collectAsState()
 
     Box(
         modifier = modifier
@@ -30,13 +25,8 @@ fun TabRowScreen(
         when (tabIndex) {
             0 -> TopScreen()
             1 -> TalksScreen(
-                talks = talks,
-                onTalkClick = { talk -> /* 画面遷移など */ },
-                onTalkDelete = { talk -> talksViewModel.deleteTalk(talk) },
-                getDaysUntilExpiry = { talk ->
-                    val expiryDate = talk.createdAt.plusWeeks(1)
-                    val now = LocalDateTime.now()
-                    Duration.between(now, expiryDate).toDays()
+                onTalkClick = { talk ->
+                    navController.navigate("talk/${talk.id}")
                 }
             )
         }

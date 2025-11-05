@@ -16,11 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.Talks
-import com.example.talkeasy.ui.theme.TalkEasyTheme
+import com.example.talkeasy.data.viewmodel.TalksViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.Duration
@@ -29,11 +29,10 @@ import java.time.Duration
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TalksScreen(
-    talks: List<Talks>,
-    onTalkClick: (Talks) -> Unit,
-    onTalkDelete: (Talks) -> Unit,
-    getDaysUntilExpiry: (Talks) -> Long
+    viewModel: TalksViewModel = hiltViewModel(),
+    onTalkClick: (Talks) -> Unit = {}
 ) {
+    val talks by viewModel.talks.collectAsState()
     var talkToDelete by remember { mutableStateOf<Talks?>(null) }
 
     if (talkToDelete != null) {
@@ -44,7 +43,7 @@ fun TalksScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        talkToDelete?.let(onTalkDelete)
+                        talkToDelete?.let(viewModel::deleteTalk)
                         talkToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -86,7 +85,12 @@ fun TalksScreen(
         ) {
             items(talks, key = { it.id }) { talk ->
                 val dismissState = rememberSwipeToDismissBoxState(
-                    confirmValueChange = { false }
+                    confirmValueChange = { value ->
+                        if (value == SwipeToDismissBoxValue.EndToStart) {
+                            talkToDelete = talk
+                        }
+                        false
+                    }
                 )
 
                 SwipeToDismissBox(
@@ -104,22 +108,12 @@ fun TalksScreen(
                                 .padding(end = 16.dp),
                             contentAlignment = Alignment.CenterEnd
                         ) {
-                            IconButton(
-                                onClick = {
-                                    talkToDelete = talk
-                                },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.2f))
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.delete),
-                                    contentDescription = "Delete",
-                                    tint = Color.Red,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            Icon(
+                                painter = painterResource(id = R.drawable.delete),
+                                contentDescription = "Delete",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     },
                     content = {
@@ -131,7 +125,8 @@ fun TalksScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(talk.title, style = MaterialTheme.typography.titleMedium)
                                 val formatter = DateTimeFormatter.ofPattern("yy/MM/dd")
-                                val daysLeft = getDaysUntilExpiry(talk)
+                                val expiryDate = talk.createdAt.plusWeeks(1)
+                                val daysLeft = Duration.between(LocalDateTime.now(), expiryDate).toDays()
                                 val dateColor = if (daysLeft <= 1) Color.Red else Color.Black
                                 Text(
                                     talk.createdAt.format(formatter),
@@ -145,28 +140,5 @@ fun TalksScreen(
                 )
             }
         }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun TalksScreenPreview() {
-    TalkEasyTheme {
-        val now = LocalDateTime.now()
-        val previewTalks = listOf(
-            Talks(1, "期限切れ間近", now.minusDays(6), now),
-            Talks(2, "通常トーク", now.minusDays(2), now)
-        )
-        TalksScreen(
-            talks = previewTalks,
-            onTalkClick = {},
-            onTalkDelete = {},
-            getDaysUntilExpiry = { talk ->
-                val expiryDate = talk.createdAt.plusWeeks(1)
-                val now = LocalDateTime.now()
-                Duration.between(now, expiryDate).toDays()
-            }
-        )
     }
 }

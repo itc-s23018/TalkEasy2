@@ -49,7 +49,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                     .padding(vertical = 8.dp)
             ) {
                 IconButton(
-                    onClick = { navController.navigate("talks") },
+                    onClick = { navController.navigate("tabs/1") },
                     modifier = Modifier
                         .size(48.dp)
                         .align(Alignment.CenterStart)

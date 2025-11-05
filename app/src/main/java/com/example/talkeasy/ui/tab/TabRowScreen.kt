@@ -10,8 +10,8 @@ import com.example.talkeasy.ui.screen.TalksScreen
 import com.example.talkeasy.ui.screen.TopScreen
 
 @Composable
-fun TabRowScreen(modifier: Modifier = Modifier) {
-    var tabIndex by remember { mutableStateOf(0) }
+fun TabRowScreen(modifier: Modifier = Modifier, initialTabIndex: Int = 0) {
+    var tabIndex by remember { mutableStateOf(initialTabIndex) }
 
     Box(
         modifier = modifier

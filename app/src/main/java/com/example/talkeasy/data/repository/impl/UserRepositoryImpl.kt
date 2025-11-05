@@ -13,5 +13,5 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun update(user: User) = dao.update(user)
 
-    override suspend fun getUser(): User = dao.getUser()
+    override suspend fun getUser(): User? = dao.getUser()
 }

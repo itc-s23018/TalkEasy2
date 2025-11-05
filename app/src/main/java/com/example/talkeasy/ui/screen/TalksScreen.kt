@@ -1,5 +1,7 @@
 package com.example.talkeasy.ui.screen
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,7 +44,6 @@ fun TalksScreen(viewModel: TalksListViewModel = hiltViewModel()) {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("タイトル: ${talk.title}", style = MaterialTheme.typography.titleMedium)
-                    Text("作成日時: ${talk.createdAt}")
                 }
             }
         }
@@ -50,6 +51,7 @@ fun TalksScreen(viewModel: TalksListViewModel = hiltViewModel()) {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun TalksScreenPreview() {

@@ -33,7 +33,7 @@ fun TabRowView(
     Surface(
         modifier = modifier.width(200.dp),
         shape = RoundedCornerShape(50.dp),
-        color = Color.White.copy(alpha = 0.3f),
+        color = Color.White,
         border = BorderStroke(3.dp, Color.Black)
     ) {
         TabRow(

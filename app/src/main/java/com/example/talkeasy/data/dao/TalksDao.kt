@@ -13,8 +13,8 @@ interface TalksDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTalk(talk: Talks): Long
 
-    @Update
-    suspend fun updateTalk(talk: Talks)
+    @Query("UPDATE talks SET title = :newTitle WHERE id = :talkId")
+    suspend fun updateTitle(talkId: Int, newTitle: String)
 
     @Delete
     suspend fun deleteTalk(talk: Talks)

@@ -8,10 +8,15 @@ import jakarta.inject.Inject
 import java.time.LocalDateTime
 
 class TalksRepository @Inject constructor(private val dao: TalksDao) {
-    suspend fun createTalk(title: String): Int {
+
+    suspend fun createTalk(): Int {
         val now = LocalDateTime.now()
-        val talk = Talks(title = title, createdAt = now, updatedAt = now)
+        val talk = Talks(title = "新しいトーク", createdAt = now, updatedAt = now)
         return dao.insertTalk(talk).toInt()
+    }
+
+    suspend fun updateTalkTitle(talkId: Int, newTitle: String) {
+        dao.updateTitle(talkId, newTitle)
     }
 
     suspend fun getTalk(id: Int): Talks? = dao.getTalkById(id)

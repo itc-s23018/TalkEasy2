@@ -1,7 +1,5 @@
 package com.example.talkeasy.data.viewmodel
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -81,8 +79,9 @@ class TopViewModel @Inject constructor(
 
     fun createNewTalk(title: String, onCreated: (Int) -> Unit) {
         viewModelScope.launch {
-            val talkId = talksRepository.createTalk(title)
+            val talkId = talksRepository.createTalk()
             onCreated(talkId)
         }
     }
+
 }

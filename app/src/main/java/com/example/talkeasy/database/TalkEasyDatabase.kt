@@ -4,33 +4,46 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.talkeasy.data.entity.MessagesEntity
-import com.example.talkeasy.data.entity.TalksEntity
-import com.example.talkeasy.data.entity.UserEntity
-import com.example.talkeasy.data.entity.WordsEntity
-import kotlinx.coroutines.InternalCoroutinesApi
+import androidx.room.TypeConverters
+import com.example.talkeasy.data.dao.MessagesDao
+import com.example.talkeasy.data.dao.TalksDao
+import com.example.talkeasy.data.dao.UserDao
+import com.example.talkeasy.data.dao.WordsDao
+import com.example.talkeasy.data.entity.Messages
+import com.example.talkeasy.data.entity.Talks
+import com.example.talkeasy.data.entity.User
+import com.example.talkeasy.data.entity.Words
 
-@Database(entities = [UserEntity::class, TalksEntity::class, MessagesEntity::class, WordsEntity::class],
+@Database(
+    entities = [
+        User::class,
+        Talks::class,
+        Messages::class,
+        Words::class
+    ],
     version = 1,
-    exportSchema = false)
-annotation class TalkEasyDatabase : RoomDatabase() {
+    exportSchema = false
+)
+@TypeConverters(DateTimeConverters::class)
+abstract class AppDatabase : RoomDatabase() {
+
     abstract fun userDao(): UserDao
     abstract fun talksDao(): TalksDao
     abstract fun messagesDao(): MessagesDao
     abstract fun wordsDao(): WordsDao
 
-    companion object{
+    companion object {
         @Volatile
-        private var Instance: TalkEasyDatabase? = null
+        private var INSTANCE: AppDatabase? = null
 
-        @OptIn(InternalCoroutinesApi::class)
-        fun getDatabese(context: Context): TalkEasyDatabase {
-            return Instance ?: synchronized(this) {
+        fun getInstance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
-                    context, TalkEasyDatabase::class.java,
-                    "talk_easy_database"
-                ).build().also { Instance = it }
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "app_database"
+                ).build().also { INSTANCE = it }
             }
-        })
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.example.talkeasy.data.viewmodel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.entity.Talks
@@ -9,6 +11,8 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.Duration
 
 @HiltViewModel
 class TalksViewModel @Inject constructor(
@@ -22,8 +26,8 @@ class TalksViewModel @Inject constructor(
     val talks: StateFlow<List<Talks>> = _talks
 
     init {
-        loadAllTalks()
         cleanUpOldTalks()
+        loadAllTalks()
     }
 
     fun loadTalk(talkId: Int) {
@@ -58,7 +62,6 @@ class TalksViewModel @Inject constructor(
     fun cleanUpOldTalks() {
         viewModelScope.launch {
             repository.deleteTalksOlderThanAWeek()
-            loadAllTalks()
         }
     }
 
@@ -66,5 +69,12 @@ class TalksViewModel @Inject constructor(
         viewModelScope.launch {
             _talks.value = repository.getAllTalks()
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getDaysUntilExpiry(talk: Talks): Long {
+        val expiryDate = talk.createdAt.plusWeeks(1)
+        val now = LocalDateTime.now()
+        return Duration.between(now, expiryDate).toDays()
     }
 }

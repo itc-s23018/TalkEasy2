@@ -4,49 +4,36 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.Talks
-import com.example.talkeasy.data.viewmodel.TalksViewModel
-import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.Duration
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun TalksScreen(viewModel: TalksViewModel = hiltViewModel()) {
-    val navController = LocalNavController.current
-    val talks by viewModel.talks.collectAsState()
-
-    TalksScreenContent(
-        talks = talks,
-        onTalkClick = { talk -> navController.navigate("talk/${talk.id}") },
-        onTalkDelete = { talk -> viewModel.deleteTalk(talk) }
-    )
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TalksScreenContent(talks: List<Talks>, onTalkClick: (Talks) -> Unit, onTalkDelete: (Talks) -> Unit) {
+fun TalksScreenContent(
+    talks: List<Talks>,
+    onTalkClick: (Talks) -> Unit,
+    onTalkDelete: (Talks) -> Unit,
+    getDaysUntilExpiry: (Talks) -> Long
+) {
     var talkToDelete by remember { mutableStateOf<Talks?>(null) }
 
     if (talkToDelete != null) {
@@ -84,7 +71,6 @@ fun TalksScreenContent(talks: List<Talks>, onTalkClick: (Talks) -> Unit, onTalkD
         )
     }
 
-
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -100,13 +86,7 @@ fun TalksScreenContent(talks: List<Talks>, onTalkClick: (Talks) -> Unit, onTalkD
         ) {
             items(talks, key = { it.id }) { talk ->
                 val dismissState = rememberSwipeToDismissBoxState(
-                    confirmValueChange = {
-                        if (it == SwipeToDismissBoxValue.EndToStart) {
-                            talkToDelete = talk
-                            return@rememberSwipeToDismissBoxState false
-                        }
-                        true
-                    }
+                    confirmValueChange = { false }
                 )
 
                 SwipeToDismissBox(
@@ -121,48 +101,72 @@ fun TalksScreenContent(talks: List<Talks>, onTalkClick: (Talks) -> Unit, onTalkD
                             Modifier
                                 .fillMaxSize()
                                 .background(color)
-                                .padding(horizontal = 20.dp),
+                                .padding(end = 16.dp),
                             contentAlignment = Alignment.CenterEnd
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.delete),
-                                contentDescription = "Delete",
-                                tint = Color.Red
-                            )
+                            IconButton(
+                                onClick = {
+                                    talkToDelete = talk
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f))
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.delete),
+                                    contentDescription = "Delete",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    },
+                    content = {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onTalkClick(talk) }
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(talk.title, style = MaterialTheme.typography.titleMedium)
+                                val formatter = DateTimeFormatter.ofPattern("yy/MM/dd")
+                                val daysLeft = getDaysUntilExpiry(talk)
+                                val dateColor = if (daysLeft <= 1) Color.Red else Color.Black
+                                Text(
+                                    talk.createdAt.format(formatter),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.End,
+                                    color = dateColor
+                                )
+                            }
                         }
                     }
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onTalkClick(talk) }
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(talk.title, style = MaterialTheme.typography.titleMedium)
-                            val formatter = DateTimeFormatter.ofPattern("yy/MM/dd")
-                            Text(
-                                talk.createdAt.format(formatter),
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.End
-                            )
-                        }
-                    }
-                }
+                )
             }
         }
     }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun TalksScreenPreview() {
     TalkEasyTheme {
+        val now = LocalDateTime.now()
         val previewTalks = listOf(
-            Talks(1, "新しいトーク 1", LocalDateTime.now(), LocalDateTime.now()),
-            Talks(2, "新しいトーク 2", LocalDateTime.now(), LocalDateTime.now())
+            Talks(1, "期限切れ間近", now.minusDays(6), now),
+            Talks(2, "通常トーク", now.minusDays(2), now)
         )
-        TalksScreenContent(talks = previewTalks, onTalkClick = {}, onTalkDelete = {})
+        TalksScreenContent(
+            talks = previewTalks,
+            onTalkClick = {},
+            onTalkDelete = {},
+            getDaysUntilExpiry = { talk ->
+                val expiryDate = talk.createdAt.plusWeeks(1)
+                val now = LocalDateTime.now()
+                Duration.between(now, expiryDate).toDays()
+            }
+        )
     }
 }

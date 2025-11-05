@@ -1,38 +1,29 @@
 package com.example.talkeasy.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.R
-import com.example.talkeasy.ui.theme.TalkEasyTheme
+import com.example.talkeasy.data.entity.User
+import com.example.talkeasy.data.viewmodel.TopViewModel
+import com.example.talkeasy.ui.dialog.InputUserDialog
 
 @Composable
-fun TopScreen() {
+fun TopScreen(viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
+    val user = viewModel.user
+    val showDialog = viewModel.showUserInputDialog
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -44,8 +35,14 @@ fun TopScreen() {
                 style = MaterialTheme.typography.headlineLarge
             )
             Spacer(modifier = Modifier.height(50.dp))
+
+            if (user != null) {
+                Text("こんにちは、${user.lastName}さん", style = MaterialTheme.typography.bodyLarge)
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
             Button(
-                onClick = { /* TODO */ },
+                onClick = { /* TODO: トーク画面へ遷移 */ },
                 modifier = Modifier.size(width = 300.dp, height = 130.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -56,10 +53,7 @@ fun TopScreen() {
                         .fillMaxSize()
                         .background(
                             brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFF6495ED),
-                                    Color(0xFF5CACEE)
-                                )
+                                colors = listOf(Color(0xFF6495ED), Color(0xFF5CACEE))
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -76,9 +70,11 @@ fun TopScreen() {
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             Button(
-                onClick = { /* TODO */ },
+                onClick = { /* TODO: 辞書画面へ遷移 */ },
                 modifier = Modifier.size(width = 300.dp, height = 130.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -89,10 +85,7 @@ fun TopScreen() {
                         .fillMaxSize()
                         .background(
                             brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFFF08080),
-                                    Color(0xFFCD5C5C)
-                                )
+                                colors = listOf(Color(0xFFF08080), Color(0xFFCD5C5C))
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -110,8 +103,9 @@ fun TopScreen() {
                 }
             }
         }
+
         IconButton(
-            onClick = { /*TODO*/ },
+            onClick = { /* TODO: アカウント画面へ遷移 */ },
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 50.dp, end = 10.dp)
@@ -120,16 +114,24 @@ fun TopScreen() {
                 painter = painterResource(id = R.drawable.account),
                 contentDescription = "Account",
                 tint = Color.Black,
-                modifier = Modifier.size(300.dp),
+                modifier = Modifier.size(48.dp)
             )
         }
-    }
-}
 
-@Preview(showBackground = true, showSystemUi = false)
-@Composable
-fun TopScreenPreview() {
-    TalkEasyTheme {
-        TopScreen()
+        if (showDialog) {
+            InputUserDialog(
+                onConfirm = { lastName, firstName, lastNameRuby, firstNameRuby ->
+                    viewModel.registerUser(
+                        User(
+                            lastName = lastName,
+                            firstName = firstName,
+                            lastNameRuby = lastNameRuby,
+                            firstNameRuby = firstNameRuby
+                        )
+                    )
+                },
+                onDismiss = { viewModel.dismissDialog() }
+            )
+        }
     }
 }

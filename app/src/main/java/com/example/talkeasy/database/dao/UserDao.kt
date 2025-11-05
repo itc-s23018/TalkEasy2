@@ -6,23 +6,23 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.talkeasy.data.entity.UserEntity
+import com.example.talkeasy.data.entity.User
 
 @Dao
 interface UserDao {
 
-    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
-    suspend fun insertUser(user: UserEntity): Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUser(user: User): Long
 
     @Update
-    suspend fun updateUser(user: UserEntity)
+    suspend fun updateUser(user: User)
 
     @Delete
-    suspend fun deleteUser(user: UserEntity)
+    suspend fun deleteUser(user: User)
 
     @Query("SELECT * FROM user WHERE user_Id = :id")
-    suspend fun getUserById(id: Int): UserEntity?
+    suspend fun getUserById(id: Int): User?
 
     @Query("SELECT * FROM user ORDER BY user_Id ASC")
-    suspend fun getAllUsers(): List<UserEntity>
+    suspend fun getAllUsers(): List<User>
 }

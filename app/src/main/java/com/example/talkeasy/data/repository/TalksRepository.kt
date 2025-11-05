@@ -1,7 +1,5 @@
 package com.example.talkeasy.data.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.talkeasy.data.dao.TalksDao
 import com.example.talkeasy.data.entity.Talks
 import jakarta.inject.Inject
@@ -17,6 +15,15 @@ class TalksRepository @Inject constructor(private val dao: TalksDao) {
 
     suspend fun updateTalkTitle(talkId: Int, newTitle: String) {
         dao.updateTitle(talkId, newTitle)
+    }
+
+    suspend fun deleteTalk(talk: Talks) {
+        dao.deleteTalk(talk)
+    }
+
+    suspend fun deleteTalksOlderThanAWeek() {
+        val threshold = LocalDateTime.now().minusWeeks(1)
+        dao.deleteOldTalks(threshold)
     }
 
     suspend fun getTalk(id: Int): Talks? = dao.getTalkById(id)

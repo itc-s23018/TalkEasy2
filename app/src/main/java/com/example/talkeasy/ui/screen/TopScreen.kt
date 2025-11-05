@@ -16,12 +16,14 @@ import androidx.compose.ui.unit.dp
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.viewmodel.TopViewModel
+import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
 
 @Composable
 fun TopScreen(viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
     val user = viewModel.user
     val showDialog = viewModel.showUserInputDialog
+    val showEditDialog = viewModel.showUserEditDialog
     val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -105,7 +107,7 @@ fun TopScreen(viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltVie
         }
 
         IconButton(
-            onClick = { /* TODO: アカウント画面へ遷移 */ },
+            onClick = { viewModel.showEditDialog() },
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 50.dp, end = 10.dp)
@@ -131,6 +133,19 @@ fun TopScreen(viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltVie
                     )
                 },
                 onDismiss = { viewModel.dismissDialog() }
+            )
+        }
+
+        if (showEditDialog && user != null) {
+            EditUserDialog(
+                initialLastName = user.lastName,
+                initialFirstName = user.firstName,
+                initialLastNameRudy = user.lastNameRuby,
+                initialFirstNameRudy = user.firstNameRuby,
+                onConfirm = { ln, fn, lnr, fnr ->
+                    viewModel.updateUser(ln, fn, lnr, fnr)
+                },
+                onDismiss = { viewModel.dismissEditDialog() }
             )
         }
     }

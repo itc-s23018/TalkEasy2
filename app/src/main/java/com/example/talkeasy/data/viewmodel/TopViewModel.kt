@@ -14,12 +14,15 @@ import javax.inject.Inject
 @HiltViewModel
 class TopViewModel @Inject constructor(
     private val userRepository: UserRepository
-): ViewModel()  {
+) : ViewModel() {
 
     var user by mutableStateOf<User?>(null)
         private set
 
     var showUserInputDialog by mutableStateOf(false)
+        private set
+
+    var showUserEditDialog by mutableStateOf(false)
         private set
 
     init {
@@ -41,8 +44,31 @@ class TopViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository.insertUser(user)
             this@TopViewModel.user = user
-            showUserInputDialog= false
+            showUserInputDialog = false
         }
+    }
+
+    fun updateUser(lastName: String, firstName: String, lastNameRuby: String, firstNameRuby: String) {
+        val current = user ?: return
+        val updated = current.copy(
+            lastName = lastName,
+            firstName = firstName,
+            lastNameRuby = lastNameRuby,
+            firstNameRuby = firstNameRuby
+        )
+        viewModelScope.launch {
+            userRepository.update(updated)
+            user = updated
+            showUserEditDialog = false
+        }
+    }
+
+    fun showEditDialog() {
+        showUserEditDialog = true
+    }
+
+    fun dismissEditDialog() {
+        showUserEditDialog = false
     }
 
     fun dismissDialog() {

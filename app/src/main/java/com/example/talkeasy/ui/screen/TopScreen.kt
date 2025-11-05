@@ -9,22 +9,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.viewmodel.TopViewModel
+import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
 
 @Composable
-fun TopScreen(viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
+fun TopScreen(
+    viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+) {
+    val navController = LocalNavController.current
     val user = viewModel.user
     val showDialog = viewModel.showUserInputDialog
     val showEditDialog = viewModel.showUserEditDialog
-    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -76,7 +78,7 @@ fun TopScreen(viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltVie
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* TODO: 辞書画面へ遷移 */ },
+                onClick = { navController.navigate("words") },
                 modifier = Modifier.size(width = 300.dp, height = 130.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

@@ -1,4 +1,3 @@
-
 package com.example.talkeasy.ui.tab
 
 import androidx.compose.foundation.layout.*
@@ -19,13 +18,11 @@ fun TabRowScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // メイン画面表示（上部）
         when (tabIndex) {
-            0 -> TopScreen()
+            0 -> TopScreen() // navController は CompositionLocal から取得
             1 -> TalksScreen()
         }
 
-        // タブバーを画面下部中央に配置
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

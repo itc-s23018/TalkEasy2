@@ -28,7 +28,7 @@ import java.time.Duration
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TalksScreenContent(
+fun TalksScreen(
     talks: List<Talks>,
     onTalkClick: (Talks) -> Unit,
     onTalkDelete: (Talks) -> Unit,
@@ -158,7 +158,7 @@ fun TalksScreenPreview() {
             Talks(1, "期限切れ間近", now.minusDays(6), now),
             Talks(2, "通常トーク", now.minusDays(2), now)
         )
-        TalksScreenContent(
+        TalksScreen(
             talks = previewTalks,
             onTalkClick = {},
             onTalkDelete = {},

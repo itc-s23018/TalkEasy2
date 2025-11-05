@@ -41,12 +41,14 @@ class TalksViewModel @Inject constructor(
         viewModelScope.launch {
             repository.updateTalkTitle(talkId, newTitle)
             _talkTitle.value = newTitle
+            loadAllTalks()
         }
     }
 
     fun createNewTalk(onCreated: (Int) -> Unit) {
         viewModelScope.launch {
             val newId = repository.createTalk()
+            cleanUpOldTalks()
             onCreated(newId)
             loadAllTalks()
         }
@@ -71,7 +73,6 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun getDaysUntilExpiry(talk: Talks): Long {
         val expiryDate = talk.createdAt.plusWeeks(1)
         val now = LocalDateTime.now()

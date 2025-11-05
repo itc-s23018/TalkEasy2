@@ -22,5 +22,5 @@ data class Messages(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val talkId: Int,
     val text: String,
-    val createdAt: LocalDateTime,
+    val createdAt: LocalDateTime
 )

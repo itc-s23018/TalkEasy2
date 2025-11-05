@@ -43,10 +43,10 @@ fun TopScreen() {
                 text = stringResource(id = R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge
             )
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(50.dp))
             Button(
                 onClick = { /* TODO */ },
-                modifier = Modifier.size(width = 250.dp, height = 100.dp),
+                modifier = Modifier.size(width = 300.dp, height = 130.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues()
@@ -65,7 +65,7 @@ fun TopScreen() {
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("トークを始める", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                        Text("トークを始める", style = MaterialTheme.typography.headlineMedium, color = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             painter = painterResource(id = R.drawable.talk),
@@ -79,7 +79,7 @@ fun TopScreen() {
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = { /* TODO */ },
-                modifier = Modifier.size(width = 250.dp, height = 100.dp),
+                modifier = Modifier.size(width = 300.dp, height = 130.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues()
@@ -98,7 +98,7 @@ fun TopScreen() {
                     contentAlignment = Alignment.Center
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("マイ辞書", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                        Text("マイ辞書", style = MaterialTheme.typography.headlineMedium, color = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             painter = painterResource(id = R.drawable.dictionary),
@@ -114,13 +114,13 @@ fun TopScreen() {
             onClick = { /*TODO*/ },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 50.dp, end = 16.dp)
+                .padding(top = 50.dp, end = 10.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.account),
                 contentDescription = "Account",
                 tint = Color.Black,
-                modifier = Modifier.size(50.dp)
+                modifier = Modifier.size(300.dp),
             )
         }
     }

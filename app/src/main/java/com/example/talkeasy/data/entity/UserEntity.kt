@@ -1,10 +1,14 @@
 package com.example.talkeasy.data.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 
-@Entity(tableName = "user")
+@Entity(
+    tableName = "user",
+    indices = [Index(value = ["lastName", "firstName"], unique = true)]
+)
 data class User(
     @PrimaryKey(autoGenerate = true) val user_Id: Int = 1,
     val lastName: String,

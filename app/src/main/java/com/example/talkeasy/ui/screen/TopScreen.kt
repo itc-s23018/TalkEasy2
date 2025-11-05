@@ -18,6 +18,7 @@ import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
+import java.util.UUID
 
 @Composable
 fun TopScreen(
@@ -46,7 +47,13 @@ fun TopScreen(
             }
 
             Button(
-                onClick = { /* TODO: トーク画面へ遷移 */ },
+                onClick = {
+                    val talkId = UUID.randomUUID().toString()
+                    val title = "新しいトーク $talkId"
+                    viewModel.createNewTalk(title) { createdId ->
+                        navController.navigate("talk/$createdId")
+                    }
+                },
                 modifier = Modifier.size(width = 300.dp, height = 130.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

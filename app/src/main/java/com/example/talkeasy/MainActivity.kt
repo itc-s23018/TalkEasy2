@@ -8,6 +8,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.talkeasy.ui.LocalNavController
+import com.example.talkeasy.ui.screen.TalkScreen
+import com.example.talkeasy.ui.screen.TalksScreen
 import com.example.talkeasy.ui.screen.WordsScreen
 import com.example.talkeasy.ui.tab.TabRowScreen
 import com.example.talkeasy.ui.theme.TalkEasyTheme
@@ -25,6 +27,13 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "tabs") {
                         composable("tabs") { TabRowScreen() }
                         composable("words") { WordsScreen() }
+                        composable("talks") { TalksScreen() }
+                        composable("talk/{talkId}") { backStackEntry ->
+                            val talkId = backStackEntry.arguments?.getString("talkId")?.toIntOrNull()
+                            if (talkId != null) {
+                                TalkScreen(talkId = talkId)
+                            }
+                        }
                     }
                 }
             }

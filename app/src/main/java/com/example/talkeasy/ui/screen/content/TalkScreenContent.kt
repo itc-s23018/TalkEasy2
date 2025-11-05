@@ -1,38 +1,30 @@
-package com.example.talkeasy.ui.screen
+package com.example.talkeasy.ui.screen.content
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
-import com.example.talkeasy.data.viewmodel.TalksViewModel
-import com.example.talkeasy.ui.LocalNavController
-import com.example.talkeasy.ui.dialog.EditTilteDialog
-import com.example.talkeasy.ui.theme.TalkEasyTheme
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
-    val navController = LocalNavController.current
-    val talkTitle by viewModel.talkTitle.collectAsState()
-    var showEditDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(talkId) {
-        viewModel.loadTalk(talkId)
-    }
-
+fun TalkScreenContent(
+    talkTitle: String,
+    onBackClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onConfirmEdit: (String) -> Unit,
+    onDismissEdit: () -> Unit
+) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
@@ -49,7 +41,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                     .padding(vertical = 8.dp)
             ) {
                 IconButton(
-                    onClick = { navController.navigate("talks") },
+                    onClick = onBackClick,
                     modifier = Modifier
                         .size(48.dp)
                         .align(Alignment.CenterStart)
@@ -73,7 +65,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                         fontSize = 20.sp,
                     )
                     IconButton(
-                        onClick = { showEditDialog = true },
+                        onClick = onEditClick,
                         modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
@@ -99,27 +91,6 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                     )
                 }
             }
-
-            if (showEditDialog) {
-                EditTilteDialog(
-                    initialTalkTitle = talkTitle,
-                    onConfirm = { newTitle ->
-                        viewModel.updateTalkTitle(talkId, newTitle)
-                        showEditDialog = false
-                    },
-                    onDismiss = { showEditDialog = false }
-                )
-            }
         }
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun TalkScreenPreview() {
-    TalkEasyTheme {
-        TalkScreen(talkId = 0)
     }
 }

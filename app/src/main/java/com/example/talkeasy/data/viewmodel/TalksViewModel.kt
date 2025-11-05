@@ -18,6 +18,14 @@ class TalksViewModel @Inject constructor(
     private val _talkTitle = MutableStateFlow("新しいトーク")
     val talkTitle: StateFlow<String> = _talkTitle
 
+    private val _talks = MutableStateFlow<List<Talks>>(emptyList())
+    val talks: StateFlow<List<Talks>> = _talks
+
+    init {
+        loadAllTalks()
+        cleanUpOldTalks()
+    }
+
     fun loadTalk(talkId: Int) {
         viewModelScope.launch {
             val talk = repository.getTalk(talkId)
@@ -36,19 +44,27 @@ class TalksViewModel @Inject constructor(
         viewModelScope.launch {
             val newId = repository.createTalk()
             onCreated(newId)
+            loadAllTalks()
         }
     }
 
-    fun deleteTalk(talk: Talks, onDeleted: () -> Unit = {}) {
+    fun deleteTalk(talk: Talks) {
         viewModelScope.launch {
             repository.deleteTalk(talk)
-            onDeleted()
+            loadAllTalks()
         }
     }
 
     fun cleanUpOldTalks() {
         viewModelScope.launch {
             repository.deleteTalksOlderThanAWeek()
+            loadAllTalks()
+        }
+    }
+
+    fun loadAllTalks() {
+        viewModelScope.launch {
+            _talks.value = repository.getAllTalks()
         }
     }
 }

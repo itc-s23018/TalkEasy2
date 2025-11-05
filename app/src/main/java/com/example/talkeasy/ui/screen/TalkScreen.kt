@@ -23,10 +23,11 @@ import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.dialog.EditTilteDialog
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val navController = LocalNavController.current
-    val talkTitle by viewModel.talkTitle.collectAsState()
+    val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
     var showEditDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(talkId) {
@@ -113,7 +114,6 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
         }
     }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)

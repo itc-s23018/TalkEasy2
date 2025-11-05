@@ -15,18 +15,12 @@ import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.entity.Words
 
 @Database(
-    entities = [
-        User::class,
-        Talks::class,
-        Messages::class,
-        Words::class
-    ],
+    entities = [User::class, Talks::class, Messages::class, Words::class],
     version = 1,
     exportSchema = false
 )
 @TypeConverters(DateTimeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun userDao(): UserDao
     abstract fun talksDao(): TalksDao
     abstract fun messagesDao(): MessagesDao

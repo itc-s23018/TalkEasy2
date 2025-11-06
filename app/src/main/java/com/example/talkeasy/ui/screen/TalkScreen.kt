@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.ui.LocalNavController
+import com.example.talkeasy.ui.component.MessagesButton
 import com.example.talkeasy.ui.dialog.EditTilteDialog
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
@@ -115,43 +116,11 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 音声入力ボタン
-                Button(
-                    onClick = { /* 音声入力処理 */ },
-                    modifier = Modifier.size(100.dp),
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.voice_input),
-                        contentDescription = "音声入力",
-                        modifier = Modifier.size(40.dp),
-                        tint = Color.White
-                    )
-                }
+            MessagesButton(
+                onVoiceInputClick = { /* 音声入力処理 */ },
+                onKeyboardInputClick = { /* キーボード入力処理 */ }
+            )
 
-                // キーボード入力ボタン
-                Button(
-                    onClick = { /* キーボード入力処理 */ },
-                    modifier = Modifier.size(100.dp),
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.keyboard),
-                        contentDescription = "キーボード入力",
-                        modifier = Modifier.size(40.dp),
-                        tint = Color.White
-                    )
-                }
-            }
         }
     }
 }

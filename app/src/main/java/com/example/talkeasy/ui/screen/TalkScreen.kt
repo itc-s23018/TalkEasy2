@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +21,7 @@ import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessagesButton
 import com.example.talkeasy.ui.dialog.EditTilteDialog
+import com.example.talkeasy.ui.dialog.TextInputDialog
 import com.example.talkeasy.ui.dialog.VoiceInputDialog
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
@@ -32,6 +32,8 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
+    var showTextInputDialog by remember { mutableStateOf(false) }
+
 
 
     LaunchedEffect(talkId) {
@@ -120,7 +122,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
 
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
-                onKeyboardInputClick = { /* キーボード入力処理 */ }
+                onKeyboardInputClick = { showTextInputDialog = true },
             )
 
             if (showVoiceInputDialog) {
@@ -133,16 +135,14 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 )
             }
 
-
-        }
+            if (showTextInputDialog) {
+                TextInputDialog(
+                    onDismissRequest = { showTextInputDialog = false },
+                    onConfirm = { result ->
+                        println("入力されたテキスト: $result")
+                    }
+                )
+            }
     }
 }
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun TalkScreenPreview() {
-    TalkEasyTheme {
-        TalkScreen(talkId = 0)
-    }
 }

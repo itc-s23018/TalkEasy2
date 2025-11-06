@@ -1,7 +1,6 @@
 package com.example.talkeasy.ui.screen
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -14,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +30,7 @@ import com.example.talkeasy.ui.dialog.VoiceInputDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import java.util.Locale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -43,11 +44,25 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
 
     // 🎤 マイク権限の状態を取得
     val micPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
-
-    // 🎤 権限がまだならリクエスト
     LaunchedEffect(Unit) {
         if (!micPermissionState.status.isGranted) {
             micPermissionState.launchPermissionRequest()
+        }
+    }
+
+    val context = LocalContext.current
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    DisposableEffect(Unit) {
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale.JAPANESE
+            }
+        }
+
+        onDispose {
+            tts?.stop()
+            tts?.shutdown()
         }
     }
 
@@ -144,7 +159,8 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 messages.forEach { message ->
                     MessageBubble(
                         text = message.text,
-                        inputType = message.inputType
+                        inputType = message.inputType,
+                        onSpeak = { tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null) } // ← it は message.text に渡される
                     )
                 }
             }
@@ -166,12 +182,13 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 )
             }
 
-            // テキスト入力ダイアログ
+            // テキスト入力ダイアログ（送信時に読み上げ）
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
                     onConfirm = {
                         viewModel.sendMessage(talkId, it, InputType.TEXT)
+                        tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
                     }
                 )

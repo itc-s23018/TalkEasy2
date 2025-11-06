@@ -23,7 +23,11 @@ import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.InputType
 
 @Composable
-fun MessageBubble(text: String, inputType: InputType) {
+fun MessageBubble(
+    text: String,
+    inputType: InputType,
+    onSpeak: (String) -> Unit = {} // ← 追加
+) {
     val (isUser, bubbleColor) = when (inputType) {
         InputType.TEXT -> true to Color(0xFFDCF8C6)
         InputType.VOICE -> false to Color(0xFFBBDEFB)
@@ -48,11 +52,11 @@ fun MessageBubble(text: String, inputType: InputType) {
                     text = text,
                     fontSize = 20.sp,
                     color = Color.Black,
-                    modifier = Modifier.padding(end = 4.dp) // ← 1文字分の余白
+                    modifier = Modifier.weight(1f)
                 )
 
                 if (inputType == InputType.TEXT) {
-                    IconButton(onClick = { /* 再生処理など */ }) {
+                    IconButton(onClick = { onSpeak(text) }) { // ← it → text に修正
                         Icon(
                             painter = painterResource(id = R.drawable.speaker),
                             contentDescription = "音声生成",

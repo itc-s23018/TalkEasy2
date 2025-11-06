@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +22,7 @@ import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessagesButton
 import com.example.talkeasy.ui.dialog.EditTilteDialog
+import com.example.talkeasy.ui.dialog.VoiceInputDialog
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -31,6 +31,8 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val navController = LocalNavController.current
     val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
     var showEditDialog by remember { mutableStateOf(false) }
+    var showVoiceInputDialog by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(talkId) {
         viewModel.loadTalk(talkId)
@@ -117,9 +119,20 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
             Spacer(modifier = Modifier.weight(1f))
 
             MessagesButton(
-                onVoiceInputClick = { /* 音声入力処理 */ },
+                onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = { /* キーボード入力処理 */ }
             )
+
+            if (showVoiceInputDialog) {
+                VoiceInputDialog(
+                    onDismiss = { showVoiceInputDialog = false },
+                    onResult = { result ->
+                        // 音声認識結果の処理（例：タイトル更新やメッセージ追加など）
+                        println("音声認識結果: $result")
+                    }
+                )
+            }
+
 
         }
     }

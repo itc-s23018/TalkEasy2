@@ -5,7 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,25 +21,24 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.ui.LocalNavController
+import com.example.talkeasy.ui.component.MessageBubble
 import com.example.talkeasy.ui.component.MessagesButton
 import com.example.talkeasy.ui.dialog.EditTilteDialog
 import com.example.talkeasy.ui.dialog.TextInputDialog
 import com.example.talkeasy.ui.dialog.VoiceInputDialog
-import com.example.talkeasy.ui.theme.TalkEasyTheme
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val navController = LocalNavController.current
     val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
+    val messages by viewModel.messages.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
     var showTextInputDialog by remember { mutableStateOf(false) }
 
-
-
     LaunchedEffect(talkId) {
         viewModel.loadTalk(talkId)
+        viewModel.loadMessages(talkId)
     }
 
     Scaffold { paddingValues ->
@@ -47,6 +48,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 .padding(paddingValues)
                 .padding(top = 16.dp, start = 12.dp, end = 12.dp)
         ) {
+            // ヘッダー
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,10 +77,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                         .padding(start = 56.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = talkTitle,
-                        fontSize = 20.sp,
-                    )
+                    Text(text = talkTitle, fontSize = 20.sp)
                     IconButton(
                         onClick = { showEditDialog = true },
                         modifier = Modifier.size(48.dp)
@@ -107,42 +106,58 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 }
             }
 
+            // タイトル編集ダイアログ
             if (showEditDialog) {
                 EditTilteDialog(
                     initialTalkTitle = talkTitle,
-                    onConfirm = { newTitle ->
-                        viewModel.updateTalkTitle(talkId, newTitle)
+                    onConfirm = {
+                        viewModel.updateTalkTitle(talkId, it)
                         showEditDialog = false
                     },
                     onDismiss = { showEditDialog = false }
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            // メッセージ表示（吹き出し）
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                messages.forEach { message ->
+                    MessageBubble(text = message.text)
+                }
+            }
 
+            // 入力ボタン
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = { showTextInputDialog = true },
             )
 
+            // 音声入力ダイアログ
             if (showVoiceInputDialog) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
-                    onResult = { result ->
-                        // 音声認識結果の処理（例：タイトル更新やメッセージ追加など）
-                        println("音声認識結果: $result")
+                    onResult = {
+                        viewModel.sendMessage(talkId, it)
+                        showVoiceInputDialog = false
                     }
                 )
             }
 
+            // テキスト入力ダイアログ
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
-                    onConfirm = { result ->
-                        println("入力されたテキスト: $result")
+                    onConfirm = {
+                        viewModel.sendMessage(talkId, it)
+                        showTextInputDialog = false
                     }
                 )
             }
+        }
     }
-}
 }

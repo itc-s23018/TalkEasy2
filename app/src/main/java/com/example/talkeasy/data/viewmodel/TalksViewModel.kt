@@ -4,12 +4,14 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.repository.TalksRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.Duration
@@ -73,9 +75,27 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    fun getDaysUntilExpiry(talk: Talks): Long {
-        val expiryDate = talk.createdAt.plusWeeks(1)
-        val now = LocalDateTime.now()
-        return Duration.between(now, expiryDate).toDays()
+    fun sendMessage(talkId: Int, text: String) {
+        viewModelScope.launch {
+            val message = Messages(
+                talkId = talkId,
+                text = text,
+                createdAt = LocalDateTime.now()
+            )
+            repository.insertMessage(message)
+
+            // 既存リストに即時追加（DB再取得を待たずに表示）
+            _messages.update { current -> current + message }
+        }
+    }
+
+
+    private val _messages = MutableStateFlow<List<Messages>>(emptyList())
+    val messages: StateFlow<List<Messages>> = _messages
+
+    fun loadMessages(talkId: Int) {
+        viewModelScope.launch {
+            _messages.value = repository.getMessagesForTalk(talkId)
+        }
     }
 }

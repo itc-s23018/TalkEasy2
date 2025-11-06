@@ -26,7 +26,11 @@ import com.example.talkeasy.ui.component.MessagesButton
 import com.example.talkeasy.ui.dialog.EditTilteDialog
 import com.example.talkeasy.ui.dialog.TextInputDialog
 import com.example.talkeasy.ui.dialog.VoiceInputDialog
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val navController = LocalNavController.current
@@ -35,6 +39,16 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
     var showTextInputDialog by remember { mutableStateOf(false) }
+
+    // 🎤 マイク権限の状態を取得
+    val micPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
+
+    // 🎤 権限がまだならリクエスト
+    LaunchedEffect(Unit) {
+        if (!micPermissionState.status.isGranted) {
+            micPermissionState.launchPermissionRequest()
+        }
+    }
 
     LaunchedEffect(talkId) {
         viewModel.loadTalk(talkId)

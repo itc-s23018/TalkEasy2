@@ -6,6 +6,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 
+enum class InputType {
+    TEXT, VOICE
+}
 @Entity(
     tableName = "messages",
     foreignKeys = [
@@ -22,5 +25,6 @@ data class Messages(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val talkId: Int,
     val text: String,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val inputType: InputType
 )

@@ -5,6 +5,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.talkeasy.data.dao.MessagesDao
 import com.example.talkeasy.data.dao.TalksDao
 import com.example.talkeasy.data.dao.UserDao
@@ -16,10 +18,10 @@ import com.example.talkeasy.data.entity.Words
 
 @Database(
     entities = [User::class, Talks::class, Messages::class, Words::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
-@TypeConverters(DateTimeConverters::class)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun talksDao(): TalksDao
@@ -30,13 +32,23 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        // ✅ マイグレーション定義
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE Messages ADD COLUMN inputType TEXT NOT NULL DEFAULT 'TEXT'")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "app_database"
-                ).build().also { INSTANCE = it }
+                )
+                    .addMigrations(MIGRATION_1_2) // ✅ 本番対応
+                    .build()
+                    .also { INSTANCE = it }
             }
         }
     }

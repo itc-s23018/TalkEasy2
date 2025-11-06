@@ -1,10 +1,12 @@
 package com.example.talkeasy.data.viewmodel
 
+import android.R.attr.inputType
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.dao.MessagesDao
+import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -28,12 +30,13 @@ class MessagesViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(talkId: Int, text: String) {
+    fun sendMessage(talkId: Int, text: String, inputType: InputType) {
         viewModelScope.launch {
             val message = Messages(
                 talkId = talkId,
                 text = text,
-                createdAt = LocalDateTime.now() // ← Date → LocalDateTime に戻す
+                createdAt = LocalDateTime.now(),
+                inputType = inputType
             )
             messagesDao.insertMessage(message)
             loadMessages(talkId)

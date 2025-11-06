@@ -14,9 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.talkeasy.data.entity.InputType
 
 @Composable
-fun MessageBubble(text: String, isUser: Boolean = true) {
+fun MessageBubble(text: String, inputType: InputType) {
+    val (isUser, bubbleColor) = when (inputType) {
+        InputType.TEXT -> true to Color(0xFFDCF8C6)
+        InputType.VOICE -> false to Color(0xFFBBDEFB)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -24,9 +30,7 @@ fun MessageBubble(text: String, isUser: Boolean = true) {
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (isUser) Color(0xFFDCF8C6) else Color.White
-            ),
+            colors = CardDefaults.cardColors(containerColor = bubbleColor),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.widthIn(max = 280.dp)
         ) {

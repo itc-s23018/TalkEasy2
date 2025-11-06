@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.repository.TalksRepository
@@ -75,12 +76,13 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(talkId: Int, text: String) {
+    fun sendMessage(talkId: Int, text: String, inputType: InputType) {
         viewModelScope.launch {
             val message = Messages(
                 talkId = talkId,
                 text = text,
-                createdAt = LocalDateTime.now()
+                createdAt = LocalDateTime.now(),
+                inputType = inputType // ← ここに渡す
             )
             repository.insertMessage(message)
 

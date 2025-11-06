@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
+import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessageBubble
@@ -141,7 +142,10 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                     .verticalScroll(rememberScrollState())
             ) {
                 messages.forEach { message ->
-                    MessageBubble(text = message.text)
+                    MessageBubble(
+                        text = message.text,
+                        inputType = message.inputType
+                    )
                 }
             }
 
@@ -156,7 +160,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = {
-                        viewModel.sendMessage(talkId, it)
+                        viewModel.sendMessage(talkId, it, InputType.VOICE)
                         showVoiceInputDialog = false
                     }
                 )
@@ -167,7 +171,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
                     onConfirm = {
-                        viewModel.sendMessage(talkId, it)
+                        viewModel.sendMessage(talkId, it, InputType.TEXT)
                         showTextInputDialog = false
                     }
                 )

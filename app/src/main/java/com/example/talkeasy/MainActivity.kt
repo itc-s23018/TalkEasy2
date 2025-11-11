@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.screen.TalkScreen
+import com.example.talkeasy.ui.screen.WordsScreen
 import com.example.talkeasy.ui.tab.TabRowScreen
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,6 +33,9 @@ class MainActivity : ComponentActivity() {
                         ) { backStackEntry ->
                             val tabIndex = backStackEntry.arguments?.getInt("tabIndex") ?: 0
                             TabRowScreen(modifier = Modifier, initialTabIndex = tabIndex)
+                        }
+                        composable("words") {
+                            WordsScreen()
                         }
                         composable("talk/{talkId}") { backStackEntry ->
                             val talkId = backStackEntry.arguments?.getString("talkId")?.toIntOrNull()

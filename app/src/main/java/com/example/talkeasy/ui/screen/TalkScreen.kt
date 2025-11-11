@@ -24,6 +24,7 @@ import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessageBubble
 import com.example.talkeasy.ui.component.MessagesButton
+import com.example.talkeasy.ui.component.VoiceMessageBubble
 import com.example.talkeasy.ui.dialog.EditTilteDialog
 import com.example.talkeasy.ui.dialog.TextInputDialog
 import com.example.talkeasy.ui.dialog.VoiceInputDialog
@@ -38,11 +39,11 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val navController = LocalNavController.current
     val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
     val messages by viewModel.messages.collectAsState()
+    val tempMessage by viewModel.tempMessage.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
     var showTextInputDialog by remember { mutableStateOf(false) }
 
-    // 🎤 マイク権限の状態を取得
     val micPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
     LaunchedEffect(Unit) {
         if (!micPermissionState.status.isGranted) {
@@ -59,7 +60,6 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 tts?.language = Locale.JAPANESE
             }
         }
-
         onDispose {
             tts?.stop()
             tts?.shutdown()
@@ -160,7 +160,14 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                     MessageBubble(
                         text = message.text,
                         inputType = message.inputType,
-                        onSpeak = { tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null) } // ← it は message.text に渡される
+                        onSpeak = { tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null) }
+                    )
+                }
+
+                tempMessage?.let {
+                    VoiceMessageBubble(
+                        text = it.text,
+                        isCorrecting = true
                     )
                 }
             }
@@ -175,14 +182,14 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
             if (showVoiceInputDialog) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
-                    onResult = {
-                        viewModel.sendMessage(talkId, it, InputType.VOICE)
+                    onResult = { rawText ->
+                        viewModel.correctWithFullHistory(talkId, rawText)
                         showVoiceInputDialog = false
                     }
                 )
             }
 
-            // テキスト入力ダイアログ（送信時に読み上げ）
+            // テキスト入力ダイアログ
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },

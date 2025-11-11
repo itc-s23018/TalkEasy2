@@ -8,6 +8,7 @@ import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.repository.TalksRepository
+import com.example.talkeasy.gemini.GeminiClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
-import java.time.Duration
 
 @HiltViewModel
 class TalksViewModel @Inject constructor(
@@ -27,6 +27,12 @@ class TalksViewModel @Inject constructor(
 
     private val _talks = MutableStateFlow<List<Talks>>(emptyList())
     val talks: StateFlow<List<Talks>> = _talks
+
+    private val _messages = MutableStateFlow<List<Messages>>(emptyList())
+    val messages: StateFlow<List<Messages>> = _messages
+
+    private val _tempMessage = MutableStateFlow<Messages?>(null)
+    val tempMessage: StateFlow<Messages?> = _tempMessage
 
     init {
         cleanUpOldTalks()
@@ -76,28 +82,50 @@ class TalksViewModel @Inject constructor(
         }
     }
 
+    fun loadMessages(talkId: Int) {
+        viewModelScope.launch {
+            _messages.value = repository.getMessagesForTalk(talkId)
+        }
+    }
+
     fun sendMessage(talkId: Int, text: String, inputType: InputType) {
         viewModelScope.launch {
             val message = Messages(
                 talkId = talkId,
                 text = text,
                 createdAt = LocalDateTime.now(),
-                inputType = inputType // ← ここに渡す
+                inputType = inputType
             )
             repository.insertMessage(message)
-
-            // 既存リストに即時追加（DB再取得を待たずに表示）
             _messages.update { current -> current + message }
         }
     }
 
-
-    private val _messages = MutableStateFlow<List<Messages>>(emptyList())
-    val messages: StateFlow<List<Messages>> = _messages
-
-    fun loadMessages(talkId: Int) {
+    fun correctWithFullHistory(talkId: Int, rawText: String) {
         viewModelScope.launch {
-            _messages.value = repository.getMessagesForTalk(talkId)
+            // 補正中メッセージを即時表示
+            val temp = Messages(
+                talkId = talkId,
+                text = rawText,
+                createdAt = LocalDateTime.now(),
+                inputType = InputType.VOICE
+            )
+            _tempMessage.value = temp
+
+            val historyTexts = _messages.value.map { it.text }
+
+            GeminiClient.correctSpeechTextWithContext(
+                rawText = rawText,
+                history = historyTexts,
+                onResult = { correctedText ->
+                    sendMessage(talkId, correctedText, InputType.VOICE)
+                    _tempMessage.value = null
+                },
+                onError = { error ->
+                    sendMessage(talkId, rawText, InputType.VOICE)
+                    _tempMessage.value = null
+                }
+            )
         }
     }
 }

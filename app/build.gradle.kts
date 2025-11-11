@@ -1,3 +1,6 @@
+import java.util.Properties
+import kotlin.apply
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +9,15 @@ plugins {
     alias(libs.plugins.google.dagger.hilt)
     alias(libs.plugins.room)
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
+val apiKey = localProperties["API_KEY_VOICE"] as? String ?: ""
 
 android {
     namespace = "com.example.talkeasy"
@@ -19,6 +31,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_KEY_VOICE", "\"$apiKey\"")
     }
 
     buildTypes {
@@ -42,6 +56,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     room {
@@ -68,6 +83,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.animation.core)
     ksp(libs.androidx.room.compiler)
 
     // Hilt
@@ -89,4 +105,5 @@ dependencies {
 
     implementation(libs.accompanist.permissions)
 
+    implementation(libs.okhttp)
 }

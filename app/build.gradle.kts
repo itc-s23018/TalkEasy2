@@ -17,7 +17,9 @@ val localProperties = Properties().apply {
     }
 }
 
-val apiKey = localProperties["API_KEY_VOICE"] as? String ?: ""
+val apiKey_voice = localProperties["API_KEY_VOICE"] as? String ?: ""
+
+val apiKey_text = localProperties["API_KEY_TEXT"] as? String ?: ""
 
 android {
     namespace = "com.example.talkeasy"
@@ -32,7 +34,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "API_KEY_VOICE", "\"$apiKey\"")
+        buildConfigField("String", "API_KEY_VOICE", "\"$apiKey_voice\"")
+        buildConfigField("String", "API_KEY_TEXT", "\"$apiKey_text\"")
     }
 
     buildTypes {

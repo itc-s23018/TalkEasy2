@@ -14,10 +14,11 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-object GeminiClient {
+object GeminiText {
     private const val TAG = "GeminiClient"
     private const val MODEL_NAME = "gemini-2.5-flash"
-    private val apiKey_voice = BuildConfig.API_KEY_VOICE
+
+    private val textKey = BuildConfig.API_KEY_TEXT
 
     private val ENDPOINT =
         "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent"
@@ -50,7 +51,7 @@ object GeminiClient {
 
         val request = Request.Builder()
             .url(ENDPOINT)
-            .addHeader("x-goog-api-key", apiKey_voice)
+            .addHeader("x-goog-api-key", textKey)
             .post(requestBody)
             .build()
 
@@ -92,34 +93,6 @@ object GeminiClient {
         })
     }
 
-    fun correctSpeechTextWithContext(
-        rawText: String,
-        history: List<String>,
-        onResult: (String) -> Unit,
-        onError: (String) -> Unit
-    ) {
-        val historyText = history.joinToString("\n")
-
-        val prompt = """
-            以下の音声入力の会話履歴を参考に、最後の入力を自然な文章に整えてください。
-
-            会話履歴:
-            $historyText
-
-            最後の入力: 「$rawText」
-
-            補正後の文:
-        """.trimIndent()
-
-        generateText(
-            prompt = prompt,
-            onResult = { results: List<String> ->
-                onResult(results.firstOrNull() ?: rawText)
-            },
-            onError = onError
-        )
-    }
-
     fun suggestReplyToLatestMessage(
         messages: List<String>,
         onResult: (List<String>) -> Unit,
@@ -144,7 +117,7 @@ object GeminiClient {
         返答の提案:
     """.trimIndent()
 
-        generateText(
+        GeminiVoice.generateText(
             prompt = prompt,
             onResult = { results ->
                 val rawText = results.joinToString("\n")
@@ -160,10 +133,9 @@ object GeminiClient {
                         } else null
                     }
                     .take(3)
-            onResult(suggestions)
-        },
-        onError = onError
-    )
-}
-
+                onResult(suggestions)
+            },
+            onError = onError
+        )
+    }
 }

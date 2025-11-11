@@ -1,14 +1,13 @@
 package com.example.talkeasy.data.viewmodel
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.repository.TalksRepository
-import com.example.talkeasy.gemini.GeminiClient
+import com.example.talkeasy.gemini.GeminiText
+import com.example.talkeasy.gemini.GeminiVoice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -122,7 +121,7 @@ class TalksViewModel @Inject constructor(
 
             val historyTexts = _messages.value.map { it.text }
 
-            GeminiClient.correctSpeechTextWithContext(
+            GeminiVoice.correctSpeechTextWithContext(
                 rawText = rawText,
                 history = historyTexts,
                 onResult = { correctedText ->
@@ -144,10 +143,10 @@ class TalksViewModel @Inject constructor(
 
         _isGeneratingSuggestions.value = true
 
-        GeminiClient.suggestReplyToLatestMessage(
+        GeminiText.suggestReplyToLatestMessage(
             messages = historyTexts,
             onResult = { replies ->
-                _aiSuggestions.value = replies // ← List<String> をそのまま渡す
+                _aiSuggestions.value = replies
                 _isGeneratingSuggestions.value = false
             },
             onError = { error ->

@@ -40,6 +40,9 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
     val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
     val messages by viewModel.messages.collectAsState()
     val tempMessage by viewModel.tempMessage.collectAsState()
+    val aiSuggestions by viewModel.aiSuggestions.collectAsState()
+    val isGeneratingSuggestions by viewModel.isGeneratingSuggestions.collectAsState()
+
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
     var showTextInputDialog by remember { mutableStateOf(false) }
@@ -175,7 +178,10 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
             // 入力ボタン
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
-                onKeyboardInputClick = { showTextInputDialog = true },
+                onKeyboardInputClick = {
+                    viewModel.generateReplySuggestions()
+                    showTextInputDialog = true
+                },
             )
 
             // 音声入力ダイアログ
@@ -189,7 +195,7 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 )
             }
 
-            // テキスト入力ダイアログ
+            // テキスト入力ダイアログ（AI候補付き）
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
@@ -197,9 +203,12 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                         viewModel.sendMessage(talkId, it, InputType.TEXT)
                         tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
-                    }
+                    },
+                    suggestions = aiSuggestions,
+                    isLoading = isGeneratingSuggestions
                 )
             }
         }
     }
 }
+

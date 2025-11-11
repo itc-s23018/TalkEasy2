@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 object GeminiClient {
     private const val TAG = "GeminiClient"
     private const val MODEL_NAME = "gemini-2.5-flash"
-    private val apiKey = BuildConfig.API_KEY_VOICE
+    private val apiKey_voice = BuildConfig.API_KEY_VOICE
 
     private val ENDPOINT =
         "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent"
@@ -50,7 +50,7 @@ object GeminiClient {
 
         val request = Request.Builder()
             .url(ENDPOINT)
-            .addHeader("x-goog-api-key", apiKey)
+            .addHeader("x-goog-api-key", apiKey_voice)
             .post(requestBody)
             .build()
 
@@ -119,4 +119,51 @@ object GeminiClient {
             onError = onError
         )
     }
+
+    fun suggestReplyToLatestMessage(
+        messages: List<String>,
+        onResult: (List<String>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (messages.isEmpty()) {
+            onError("メッセージ履歴が空です")
+            return
+        }
+
+        val historyText = messages.dropLast(1).joinToString("\n")
+        val latestMessage = messages.last()
+
+        val prompt = """
+        以下は会話の履歴です。最後のメッセージに対して、自然で適切な返答を3つ提案してください。
+
+        会話履歴:
+        $historyText
+
+        最後のメッセージ: 「$latestMessage」
+
+        返答の提案:
+    """.trimIndent()
+
+        generateText(
+            prompt = prompt,
+            onResult = { results ->
+                val rawText = results.joinToString("\n")
+                val suggestions = rawText
+                    .split("\n")
+                    .map { it.trim() }
+                    .filter { it.contains("「") && it.contains("」") }
+                    .mapNotNull { line ->
+                        val start = line.indexOf("「")
+                        val end = line.indexOf("」")
+                        if (start != -1 && end != -1 && end > start) {
+                            line.substring(start + 1, end)
+                        } else null
+                    }
+                    .take(3)
+            onResult(suggestions)
+        },
+        onError = onError
+    )
+}
+
 }

@@ -22,6 +22,7 @@ class TalksViewModel @Inject constructor(
     private val repository: TalksRepository
 ) : ViewModel() {
 
+    // タイトル・トーク一覧・メッセージ一覧
     private val _talkTitle = MutableStateFlow("新しいトーク")
     val talkTitle: StateFlow<String> = _talkTitle
 
@@ -31,8 +32,16 @@ class TalksViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<Messages>>(emptyList())
     val messages: StateFlow<List<Messages>> = _messages
 
+    // 補正中メッセージ（アニメーション表示用）
     private val _tempMessage = MutableStateFlow<Messages?>(null)
     val tempMessage: StateFlow<Messages?> = _tempMessage
+
+    // AI返答候補とローディング状態
+    private val _aiSuggestions = MutableStateFlow<List<String>>(emptyList())
+    val aiSuggestions: StateFlow<List<String>> = _aiSuggestions
+
+    private val _isGeneratingSuggestions = MutableStateFlow(false)
+    val isGeneratingSuggestions: StateFlow<Boolean> = _isGeneratingSuggestions
 
     init {
         cleanUpOldTalks()
@@ -103,7 +112,6 @@ class TalksViewModel @Inject constructor(
 
     fun correctWithFullHistory(talkId: Int, rawText: String) {
         viewModelScope.launch {
-            // 補正中メッセージを即時表示
             val temp = Messages(
                 talkId = talkId,
                 text = rawText,
@@ -128,4 +136,25 @@ class TalksViewModel @Inject constructor(
             )
         }
     }
+
+    // ✅ AIによる返答候補生成
+    fun generateReplySuggestions() {
+        val historyTexts = _messages.value.map { it.text }
+        if (historyTexts.isEmpty()) return
+
+        _isGeneratingSuggestions.value = true
+
+        GeminiClient.suggestReplyToLatestMessage(
+            messages = historyTexts,
+            onResult = { replies ->
+                _aiSuggestions.value = replies // ← List<String> をそのまま渡す
+                _isGeneratingSuggestions.value = false
+            },
+            onError = { error ->
+                _aiSuggestions.value = listOf("エラー: $error")
+                _isGeneratingSuggestions.value = false
+            }
+        )
+    }
+
 }

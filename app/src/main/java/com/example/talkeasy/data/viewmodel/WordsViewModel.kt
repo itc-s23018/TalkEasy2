@@ -4,11 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.dao.WordsDao
 import com.example.talkeasy.data.entity.Words
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
-class WordsViewModel(private val dao: WordsDao) : ViewModel() {
+@HiltViewModel
+class WordsViewModel @Inject constructor(
+    private val dao: WordsDao) : ViewModel() {
 
     val allWords: StateFlow<List<Words>> =
         dao.getAllWords()

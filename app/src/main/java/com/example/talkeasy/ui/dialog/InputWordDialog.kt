@@ -19,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +30,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputWordDialog(
+    categoryViewModel: CategoryViewModel,
     onConfirm: (String, String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -42,16 +45,15 @@ fun InputWordDialog(
     var inputCategory by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
-    // カテゴリリスト
-    val categories = remember { mutableStateListOf<String>() }
+    // ✅ DBからカテゴリ一覧を取得
+    val categories by categoryViewModel.categories.collectAsState()
 
     var showInputCategoryDialog by remember { mutableStateOf(false) }
 
-    // ▼ カテゴリ追加ダイアログの表示制御
     if (showInputCategoryDialog) {
         InputCategoryDialog(
             onConfirm = { newCategory ->
-                categories.add(newCategory)
+                categoryViewModel.addCategory(newCategory) // ✅ DBに保存
                 inputCategory = newCategory
                 showInputCategoryDialog = false
             },
@@ -103,14 +105,13 @@ fun InputWordDialog(
                     ) {
                         categories.forEach { category ->
                             DropdownMenuItem(
-                                text = { Text(category) },
+                                text = { Text(category.name) }, // ✅ DBの値を表示
                                 onClick = {
-                                    inputCategory = category
+                                    inputCategory = category.name
                                     expanded = false
                                 }
                             )
                         }
-                        // ▼ 追加項目
                         DropdownMenuItem(
                             text = { Text("+カテゴリを追加") },
                             onClick = {
@@ -148,19 +149,20 @@ fun InputWordDialog(
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun InputWordDialogPreview() {
-    TalkEasyTheme {
-        Surface {
-            // プレビュー用に常にダイアログを表示
-            InputWordDialog(
-                onConfirm = { _, _, _ -> },
-                onDismiss = {}
-            )
-        }
-    }
-}
+
+//@Preview(showBackground = true)
+//@Composable
+//fun InputWordDialogPreview() {
+//    TalkEasyTheme {
+//        Surface {
+//            // プレビュー用に常にダイアログを表示
+//            InputWordDialog(
+//                onConfirm = { _, _, _ -> },
+//                onDismiss = {}
+//            )
+//        }
+//    }
+//}
 
 
 

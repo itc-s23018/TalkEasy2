@@ -22,9 +22,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.R
+import com.example.talkeasy.data.viewmodel.CategoryViewModel
 
 @Composable
-fun CategorySelector() {
+fun CategorySelector(categoryViewModel: CategoryViewModel) {
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf("挨拶") }
 

@@ -34,14 +34,14 @@ class MainActivity : ComponentActivity() {
                             val tabIndex = backStackEntry.arguments?.getInt("tabIndex") ?: 0
                             TabRowScreen(modifier = Modifier, initialTabIndex = tabIndex)
                         }
-                        composable("words") {
-                            WordsScreen()
-                        }
                         composable("talk/{talkId}") { backStackEntry ->
                             val talkId = backStackEntry.arguments?.getString("talkId")?.toIntOrNull()
                             if (talkId != null) {
                                 TalkScreen(talkId = talkId)
                             }
+                        }
+                        composable("words") {
+                            WordsScreen(onBackClick = { navController.popBackStack() })
                         }
                     }
                 }

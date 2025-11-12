@@ -1,12 +1,8 @@
 package com.example.talkeasy.data.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.example.talkeasy.data.entity.Words
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WordsDao {
@@ -22,9 +18,9 @@ interface WordsDao {
     @Query("SELECT * FROM words WHERE id = :id")
     suspend fun getWordById(id: Int): Words?
 
-    @Query("SELECT * FROM words WHERE userId = :userId ORDER BY updatedAt DESC")
-    suspend fun getWordsByUser(userId: String): List<Words>
+    @Query("SELECT * FROM words ORDER BY updatedAt DESC")
+    fun getAllWords(): Flow<List<Words>>
 
     @Query("SELECT * FROM words WHERE category = :category ORDER BY updatedAt DESC")
-    suspend fun getWordsByCategory(category: String): List<Words>
+    fun getWordsByCategory(category: String): Flow<List<Words>>
 }

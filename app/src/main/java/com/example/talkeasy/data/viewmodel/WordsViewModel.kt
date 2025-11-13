@@ -31,7 +31,7 @@ class WordsViewModel @Inject constructor(
         }
     }
 
-    open fun getWords(category: String): Flow<List<Words>> {
+     fun getWords(category: String): Flow<List<Words>> {
         return if (category == "All") {
             dao.getAllWords()
         } else {
@@ -40,9 +40,19 @@ class WordsViewModel @Inject constructor(
     }
 
 
-    fun updateWord(word: Words) {
-        viewModelScope.launch { dao.updateWord(word) }
+    fun updateWord(id: Int, newWord: String, newRuby: String, newCategory: String) {
+        viewModelScope.launch {
+            val updated = Words(
+                id = id,
+                word = newWord,
+                wordRubi = newRuby,
+                category = newCategory,
+                updatedAt = LocalDateTime.now()
+            )
+            dao.updateWord(updated)
+        }
     }
+
 
     fun deleteWord(word: Words) {
         viewModelScope.launch { dao.deleteWord(word) }

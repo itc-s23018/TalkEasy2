@@ -1,7 +1,6 @@
 package com.example.talkeasy.ui.dialog
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,38 +13,36 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
-import com.example.talkeasy.ui.theme.TalkEasyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputWordDialog(
+fun EditWordDialog(
     categoryViewModel: CategoryViewModel,
+    initialWord: String,
+    initialRuby: String,
+    initialCategory: String,
     onConfirm: (String, String, String) -> Unit,
     onDismiss: () -> Unit
-) {
-    var inputWord by remember { mutableStateOf("") }
-    var inputWordRuby by remember { mutableStateOf("") }
-    var inputCategory by remember { mutableStateOf("") }
+){
+
+    var editWord by remember { mutableStateOf(initialWord) }
+    var editRuby by remember { mutableStateOf(initialRuby) }
+    var editCategory by remember { mutableStateOf(initialCategory) }
     var expanded by remember { mutableStateOf(false) }
 
-    // ✅ DBからカテゴリ一覧を取得
+
     val categories by categoryViewModel.categories.collectAsState()
 
     var showInputCategoryDialog by remember { mutableStateOf(false) }
@@ -54,7 +51,7 @@ fun InputWordDialog(
         InputCategoryDialog(
             onConfirm = { newCategory ->
                 categoryViewModel.addCategory(newCategory) // ✅ DBに保存
-                inputCategory = newCategory
+                editCategory = newCategory
                 showInputCategoryDialog = false
             },
             onDismiss = { showInputCategoryDialog = false }
@@ -63,12 +60,12 @@ fun InputWordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("用語を追加", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+        title = { Text("用語を編集", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 OutlinedTextField(
-                    value = inputWord,
-                    onValueChange = { inputWord = it },
+                    value = editWord,
+                    onValueChange = { editWord = it },
                     label = { Text("用語") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -77,8 +74,8 @@ fun InputWordDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
-                    value = inputWordRuby,
-                    onValueChange = { inputWordRuby = it },
+                    value = editRuby,
+                    onValueChange = { editRuby = it },
                     label = { Text("ルビ") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -92,7 +89,7 @@ fun InputWordDialog(
                     onExpandedChange = { expanded = !expanded }
                 ) {
                     OutlinedTextField(
-                        value = inputCategory,
+                        value = editCategory,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("カテゴリ選択") },
@@ -107,7 +104,7 @@ fun InputWordDialog(
                             DropdownMenuItem(
                                 text = { Text(category.name) }, // ✅ DBの値を表示
                                 onClick = {
-                                    inputCategory = category.name
+                                    editCategory = category.name
                                     expanded = false
                                 }
                             )
@@ -126,14 +123,14 @@ fun InputWordDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (inputWord.isNotEmpty() && inputWordRuby.isNotEmpty() && inputCategory.isNotEmpty()) {
-                        onConfirm(inputWord, inputWordRuby, inputCategory)
+                    if (editWord.isNotEmpty() && editRuby.isNotEmpty() && editCategory.isNotEmpty()) {
+                        onConfirm(editWord, editRuby, editCategory)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
                 modifier = Modifier.height(48.dp)
             ) {
-                Text("保存")
+                Text("更新")
             }
         },
         dismissButton = {
@@ -148,6 +145,3 @@ fun InputWordDialog(
         containerColor = Color.White,
     )
 }
-
-
-

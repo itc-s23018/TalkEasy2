@@ -1,21 +1,8 @@
 package com.example.talkeasy.ui.component
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,9 +12,15 @@ import com.example.talkeasy.R
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 
 @Composable
-fun CategorySelector(categoryViewModel: CategoryViewModel) {
+fun CategorySelector(
+    categoryViewModel: CategoryViewModel,
+    onCategorySelected: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf("挨拶") }
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    // ✅ DBからカテゴリ一覧を取得
+    val categories by categoryViewModel.categories.collectAsState()
 
     Row(
         modifier = Modifier
@@ -41,7 +34,6 @@ fun CategorySelector(categoryViewModel: CategoryViewModel) {
             style = MaterialTheme.typography.titleMedium
         )
 
-        // 右側にドロップダウン
         Box {
             TextButton(onClick = { expanded = true }) {
                 Text(selectedCategory)
@@ -56,26 +48,25 @@ fun CategorySelector(categoryViewModel: CategoryViewModel) {
                 onDismissRequest = { expanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("挨拶") },
+                    text = { Text("All") },
                     onClick = {
-                        selectedCategory = "挨拶"
+                        selectedCategory = "All"
+                        onCategorySelected("All")
                         expanded = false
                     }
                 )
-                DropdownMenuItem(
-                    text = { Text("名詞") },
-                    onClick = {
-                        selectedCategory = "名詞"
-                        expanded = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("動詞") },
-                    onClick = {
-                        selectedCategory = "動詞"
-                        expanded = false
-                    }
-                )
+
+                // ✅ DBに保存されたカテゴリを表示
+                categories.forEach { category ->
+                    DropdownMenuItem(
+                        text = { Text(category.name) },
+                        onClick = {
+                            selectedCategory = category.name
+                            onCategorySelected(category.name)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }

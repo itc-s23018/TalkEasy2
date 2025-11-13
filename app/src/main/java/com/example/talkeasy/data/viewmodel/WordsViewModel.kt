@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 class WordsViewModel @Inject constructor(
     private val dao: WordsDao) : ViewModel() {
 
-    val allWords: StateFlow<List<Words>> =
+    open val allWords: StateFlow<List<Words>> =
         dao.getAllWords()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
@@ -30,6 +30,15 @@ class WordsViewModel @Inject constructor(
             )
         }
     }
+
+    open fun getWords(category: String): Flow<List<Words>> {
+        return if (category == "All") {
+            dao.getAllWords()
+        } else {
+            dao.getWordsByCategory(category)
+        }
+    }
+
 
     fun updateWord(word: Words) {
         viewModelScope.launch { dao.updateWord(word) }

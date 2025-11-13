@@ -1,7 +1,11 @@
 package com.example.talkeasy.ui.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +21,7 @@ import com.example.talkeasy.ui.component.CategorySelector
 import com.example.talkeasy.ui.component.WordCard
 import com.example.talkeasy.ui.dialog.EditWordDialog
 import com.example.talkeasy.ui.dialog.InputWordDialog
+import com.example.talkeasy.ui.dialog.DeleteWordDialog
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,10 +32,8 @@ fun WordsScreen(
     onBackClick: () -> Unit
 ) {
     var showInputDialog by remember { mutableStateOf(false) }
-
-    var showEditDialog by remember { mutableStateOf(false) }
     var editingWord by remember { mutableStateOf<Words?>(null) }
-
+    var wordToDelete by remember { mutableStateOf<Words?>(null) }
     var selectedCategory by remember { mutableStateOf("All") }
 
     Scaffold(
@@ -99,21 +102,57 @@ fun WordsScreen(
                         )
                     }
                 }
-
             } else {
-                words.forEach { word ->
-                    WordCard(
-                        word = word,
-                        onClick = { clickedWord ->
-                            editingWord = clickedWord
-                            showEditDialog = true
-                        }
-                    )
+                LazyColumn {
+                    items(words, key = { it.id }) { word ->
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { value ->
+                                if (value == SwipeToDismissBoxValue.EndToStart) {
+                                    wordToDelete = word
+                                }
+                                false
+                            }
+                        )
+
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            modifier = Modifier.height(IntrinsicSize.Min),
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
+                                val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                                    Color.Red.copy(alpha = 0.8f)
+                                } else {
+                                    Color.Transparent
+                                }
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(color)
+                                        .padding(end = 16.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.delete),
+                                        contentDescription = "Delete",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            },
+                            content = {
+                                WordCard(
+                                    word = word,
+                                    onClick = { editingWord = word }
+                                )
+                            }
+                        )
+                    }
                 }
+
             }
         }
 
-
+        // 新規追加ダイアログ
         if (showInputDialog) {
             InputWordDialog(
                 categoryViewModel = categoryViewModel,
@@ -125,6 +164,7 @@ fun WordsScreen(
             )
         }
 
+        // 編集ダイアログ
         editingWord?.let { word ->
             EditWordDialog(
                 categoryViewModel = categoryViewModel,
@@ -139,7 +179,16 @@ fun WordsScreen(
             )
         }
 
-
+        // 削除確認ダイアログ
+        wordToDelete?.let { word ->
+            DeleteWordDialog(
+                word = word,
+                onConfirm = {
+                    viewModel.deleteWord(word)
+                    wordToDelete = null
+                },
+                onDismiss = { wordToDelete = null }
+            )
+        }
     }
 }
-

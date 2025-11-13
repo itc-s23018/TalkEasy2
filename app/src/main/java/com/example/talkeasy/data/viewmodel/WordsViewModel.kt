@@ -54,8 +54,11 @@ class WordsViewModel @Inject constructor(
     }
 
 
+
     fun deleteWord(word: Words) {
-        viewModelScope.launch { dao.deleteWord(word) }
+        viewModelScope.launch {
+            dao.deleteWord(word)
+        }
     }
 
     fun getWordsByCategory(category: String): Flow<List<Words>> =

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
+import com.example.talkeasy.data.entity.Words   // ← これを忘れずに import
 import com.example.talkeasy.data.repository.TalksRepository
 import com.example.talkeasy.gemini.GeminiText
 import com.example.talkeasy.gemini.GeminiVoice
@@ -109,7 +110,8 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    fun correctWithFullHistory(talkId: Int, rawText: String) {
+    // ✅ dbWords を List<Words> で受け取る
+    fun correctWithFullHistory(talkId: Int, rawText: String, dbWords: List<Words>) {
         viewModelScope.launch {
             val temp = Messages(
                 talkId = talkId,
@@ -124,6 +126,7 @@ class TalksViewModel @Inject constructor(
             GeminiVoice.correctSpeechTextWithContext(
                 rawText = rawText,
                 history = historyTexts,
+                dbWords = dbWords,   // ← List<Words> を渡す
                 onResult = { correctedText ->
                     sendMessage(talkId, correctedText, InputType.VOICE)
                     _tempMessage.value = null
@@ -155,5 +158,4 @@ class TalksViewModel @Inject constructor(
             }
         )
     }
-
 }

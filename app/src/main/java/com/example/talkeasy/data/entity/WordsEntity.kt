@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 data class Words(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val word: String,
-    val wordRubi: String,
+    val wordRuby: String,
     val updatedAt: LocalDateTime,
     val category: String,
 )

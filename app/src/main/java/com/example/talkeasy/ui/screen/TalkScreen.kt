@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.viewmodel.TalksViewModel
+import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessageBubble
 import com.example.talkeasy.ui.component.MessagesButton
@@ -35,13 +36,20 @@ import java.util.Locale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
+fun TalkScreen(
+    talkId: Int,
+    viewModel: TalksViewModel = hiltViewModel(),
+    wordsViewModel: WordsViewModel = hiltViewModel()
+) {
     val navController = LocalNavController.current
     val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
     val messages by viewModel.messages.collectAsState()
     val tempMessage by viewModel.tempMessage.collectAsState()
     val aiSuggestions by viewModel.aiSuggestions.collectAsState()
     val isGeneratingSuggestions by viewModel.isGeneratingSuggestions.collectAsState()
+
+    // ✅ 全辞書を購読
+    val allWords by wordsViewModel.allWords.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
@@ -189,7 +197,8 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
-                        viewModel.correctWithFullHistory(talkId, rawText)
+                        // ✅ Words をそのまま渡す
+                        viewModel.correctWithFullHistory(talkId, rawText, allWords)
                         showVoiceInputDialog = false
                     }
                 )
@@ -211,4 +220,3 @@ fun TalkScreen(talkId: Int, viewModel: TalksViewModel = hiltViewModel()) {
         }
     }
 }
-

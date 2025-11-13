@@ -23,7 +23,7 @@ class WordsViewModel @Inject constructor(
             dao.insertWord(
                 Words(
                     word = word,
-                    wordRubi = ruby,
+                    wordRuby = ruby,
                     category = category,
                     updatedAt = LocalDateTime.now()
                 )
@@ -45,7 +45,7 @@ class WordsViewModel @Inject constructor(
             val updated = Words(
                 id = id,
                 word = newWord,
-                wordRubi = newRuby,
+                wordRuby = newRuby,
                 category = newCategory,
                 updatedAt = LocalDateTime.now()
             )

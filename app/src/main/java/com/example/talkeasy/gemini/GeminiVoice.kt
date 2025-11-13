@@ -2,6 +2,7 @@ package com.example.talkeasy.gemini
 
 import android.util.Log
 import com.example.talkeasy.BuildConfig
+import com.example.talkeasy.data.entity.Words
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -95,21 +96,31 @@ object GeminiVoice {
     fun correctSpeechTextWithContext(
         rawText: String,
         history: List<String>,
+        dbWords: List<Words>,   // ← List<String> → List<Words> に修正
         onResult: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         val historyText = history.joinToString("\n")
 
+        // word と wordRuby を両方渡す
+        val dictionaryText = dbWords.joinToString(", ") { "${it.word}(${it.wordRuby})" }
+
         val prompt = """
-            以下の音声入力の会話履歴を参考に、最後の入力を自然な文章に整えてください。
+        あなたのタスクは「最新の入力の文」を自然な日本語に補正することです。
+        これまでの会話履歴とマイ辞書を参考にして、
+        会話の流れに沿った自然な文になるようにしてください。
+        補正対象は必ず最新の入力のみです。
 
-            会話履歴:
-            $historyText
+        会話履歴:
+        $historyText
 
-            最後の入力: 「$rawText」
+        マイ辞書:
+        $dictionaryText
 
-            補正後の文:
-        """.trimIndent()
+        最新の入力: 「$rawText」
+
+        補正後の文:
+    """.trimIndent()
 
         generateText(
             prompt = prompt,
@@ -119,4 +130,5 @@ object GeminiVoice {
             onError = onError
         )
     }
+
 }

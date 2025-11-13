@@ -37,7 +37,7 @@ fun WordCard(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = word.wordRubi,
+                text = word.wordRuby,
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

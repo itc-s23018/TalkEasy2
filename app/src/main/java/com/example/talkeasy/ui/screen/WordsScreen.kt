@@ -169,7 +169,7 @@ fun WordsScreen(
             EditWordDialog(
                 categoryViewModel = categoryViewModel,
                 initialWord = word.word,
-                initialRuby = word.wordRubi,
+                initialRuby = word.wordRuby,
                 initialCategory = word.category,
                 onConfirm = { newWord, newRuby, newCategory ->
                     viewModel.updateWord(word.id, newWord, newRuby, newCategory)

@@ -6,6 +6,7 @@ import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.entity.Words
+import com.example.talkeasy.data.entity.User   // ✅ ユーザー情報を追加
 import com.example.talkeasy.data.repository.TalksRepository
 import com.example.talkeasy.gemini.GeminiText
 import com.example.talkeasy.gemini.GeminiVoice
@@ -110,8 +111,13 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    // ✅ dbWords を List<Words> で受け取る
-    fun correctWithFullHistory(talkId: Int, rawText: String, dbWords: List<Words>) {
+    // ✅ 会話履歴＋辞書＋ユーザー情報を補正に渡す
+    fun correctWithFullHistory(
+        talkId: Int,
+        rawText: String,
+        dbWords: List<Words>,
+        user: User?    // ← ユーザー情報を追加
+    ) {
         viewModelScope.launch {
             val temp = Messages(
                 talkId = talkId,
@@ -126,7 +132,8 @@ class TalksViewModel @Inject constructor(
             GeminiVoice.correctSpeechTextWithContext(
                 rawText = rawText,
                 history = historyTexts,
-                dbWords = dbWords,   // ← List<Words> を渡す
+                dbWords = dbWords,
+                user = user,   // ← ユーザー情報を渡す
                 onResult = { correctedText ->
                     sendMessage(talkId, correctedText, InputType.VOICE)
                     _tempMessage.value = null

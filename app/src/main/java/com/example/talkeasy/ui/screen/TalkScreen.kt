@@ -23,6 +23,7 @@ import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.data.viewmodel.TalksViewModel
+import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.gemini.GeminiWord
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import com.example.talkeasy.ui.LocalNavController
@@ -44,7 +45,8 @@ fun TalkScreen(
     talkId: Int,
     talksViewModel: TalksViewModel = hiltViewModel(),
     wordsViewModel: WordsViewModel = hiltViewModel(),
-    categoryViewModel: CategoryViewModel = hiltViewModel()
+    categoryViewModel: CategoryViewModel = hiltViewModel(),
+    topViewModel: TopViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
     val talkTitle by talksViewModel.talkTitle.collectAsState(initial = "新しいトーク")
@@ -56,6 +58,8 @@ fun TalkScreen(
     val allWords by wordsViewModel.allWords.collectAsState()
     val extractedWordsMap by wordsViewModel.extractedWordsMap.collectAsState()
     val currentExtractedWords = extractedWordsMap[talkId] ?: emptyList()
+
+    val user = topViewModel.user
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
@@ -223,13 +227,18 @@ fun TalkScreen(
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
-                        talksViewModel.correctWithFullHistory(talkId, rawText, allWords)
+                        talksViewModel.correctWithFullHistory(
+                            talkId = talkId,
+                            rawText = rawText,
+                            dbWords = allWords,
+                            user = user   // ✅ ユーザー情報を渡す
+                        )
                         showVoiceInputDialog = false
 
                         GeminiWord.extractTermsFromHistory(
                             history = messages.map { it.text } + rawText,
                             onResult = { terms ->
-                                wordsViewModel.addExtractedWords(talkId, terms, allWords) // ✅ ViewModelでチェック
+                                wordsViewModel.addExtractedWords(talkId, terms, allWords)
                             },
                             onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
                         )

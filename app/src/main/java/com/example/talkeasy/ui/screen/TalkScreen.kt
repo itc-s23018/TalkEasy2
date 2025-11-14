@@ -1,6 +1,7 @@
 package com.example.talkeasy.ui.screen
 
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -20,12 +21,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.InputType
+import com.example.talkeasy.data.entity.Words
+import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.data.viewmodel.TalksViewModel
+import com.example.talkeasy.gemini.GeminiWord
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessageBubble
 import com.example.talkeasy.ui.component.MessagesButton
 import com.example.talkeasy.ui.component.VoiceMessageBubble
+import com.example.talkeasy.ui.dialog.DictionaryDialog
 import com.example.talkeasy.ui.dialog.EditTilteDialog
 import com.example.talkeasy.ui.dialog.TextInputDialog
 import com.example.talkeasy.ui.dialog.VoiceInputDialog
@@ -38,17 +43,17 @@ import java.util.Locale
 @Composable
 fun TalkScreen(
     talkId: Int,
-    viewModel: TalksViewModel = hiltViewModel(),
-    wordsViewModel: WordsViewModel = hiltViewModel()
+    talksViewModel: TalksViewModel = hiltViewModel(),
+    wordsViewModel: WordsViewModel = hiltViewModel(),
+    categoryViewModel: CategoryViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
-    val talkTitle by viewModel.talkTitle.collectAsState(initial = "新しいトーク")
-    val messages by viewModel.messages.collectAsState()
-    val tempMessage by viewModel.tempMessage.collectAsState()
-    val aiSuggestions by viewModel.aiSuggestions.collectAsState()
-    val isGeneratingSuggestions by viewModel.isGeneratingSuggestions.collectAsState()
+    val talkTitle by talksViewModel.talkTitle.collectAsState(initial = "新しいトーク")
+    val messages by talksViewModel.messages.collectAsState()
+    val tempMessage by talksViewModel.tempMessage.collectAsState()
+    val aiSuggestions by talksViewModel.aiSuggestions.collectAsState()
+    val isGeneratingSuggestions by talksViewModel.isGeneratingSuggestions.collectAsState()
 
-    // ✅ 全辞書を購読
     val allWords by wordsViewModel.allWords.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
@@ -77,9 +82,13 @@ fun TalkScreen(
         }
     }
 
+    // 抽出結果を累積保持する
+    val extractedWords = remember { mutableStateListOf<Words>() }
+    var showDictionaryDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(talkId) {
-        viewModel.loadTalk(talkId)
-        viewModel.loadMessages(talkId)
+        talksViewModel.loadTalk(talkId)
+        talksViewModel.loadMessages(talkId)
     }
 
     Scaffold { paddingValues ->
@@ -100,13 +109,11 @@ fun TalkScreen(
             ) {
                 IconButton(
                     onClick = { navController.navigate("tabs/1") },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterStart)
+                    modifier = Modifier.size(48.dp).align(Alignment.CenterStart)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.back),
-                        contentDescription = "Talk",
+                        contentDescription = "Back",
                         modifier = Modifier.size(40.dp),
                         tint = Color.Black
                     )
@@ -119,10 +126,7 @@ fun TalkScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = talkTitle, fontSize = 20.sp)
-                    IconButton(
-                        onClick = { showEditDialog = true },
-                        modifier = Modifier.size(48.dp)
-                    ) {
+                    IconButton(onClick = { showEditDialog = true }, modifier = Modifier.size(48.dp)) {
                         Icon(
                             painter = painterResource(id = R.drawable.edit),
                             contentDescription = "Edit",
@@ -132,11 +136,10 @@ fun TalkScreen(
                     }
                 }
 
+                // Checkボタン → 抽出済みリストを表示
                 IconButton(
-                    onClick = {},
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterEnd)
+                    onClick = { showDictionaryDialog = true },
+                    modifier = Modifier.size(48.dp).align(Alignment.CenterEnd)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.check),
@@ -147,19 +150,18 @@ fun TalkScreen(
                 }
             }
 
-            // タイトル編集ダイアログ
             if (showEditDialog) {
                 EditTilteDialog(
                     initialTalkTitle = talkTitle,
                     onConfirm = {
-                        viewModel.updateTalkTitle(talkId, it)
+                        talksViewModel.updateTalkTitle(talkId, it)
                         showEditDialog = false
                     },
                     onDismiss = { showEditDialog = false }
                 )
             }
 
-            // メッセージ表示（吹き出し）
+            // メッセージ表示
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -174,20 +176,27 @@ fun TalkScreen(
                         onSpeak = { tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null) }
                     )
                 }
-
                 tempMessage?.let {
-                    VoiceMessageBubble(
-                        text = it.text,
-                        isCorrecting = true
-                    )
+                    VoiceMessageBubble(text = it.text, isCorrecting = true)
                 }
             }
 
-            // 入力ボタン
+            // DictionaryDialog 表示
+            if (showDictionaryDialog) {
+                DictionaryDialog(
+                    onDismiss = { showDictionaryDialog = false },
+                    words = extractedWords,
+                    categoryViewModel = categoryViewModel,
+                    onWordSaved = { word ->
+                        wordsViewModel.addWord(word.word, word.wordRuby, word.category)
+                    }
+                )
+            }
+
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = {
-                    viewModel.generateReplySuggestions()
+                    talksViewModel.generateReplySuggestions()
                     showTextInputDialog = true
                 },
             )
@@ -197,21 +206,56 @@ fun TalkScreen(
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
-                        // ✅ Words をそのまま渡す
-                        viewModel.correctWithFullHistory(talkId, rawText, allWords)
+                        // 補正＆履歴保存
+                        talksViewModel.correctWithFullHistory(talkId, rawText, allWords)
                         showVoiceInputDialog = false
+
+                        // 全履歴 + 今回入力から語彙抽出（追加）
+                        GeminiWord.extractTermsFromHistory(
+                            history = messages.map { it.text } + rawText,
+                            onResult = { terms ->
+                                terms.forEach { newWord ->
+                                    if (extractedWords.none { it.word == newWord.word }) {
+                                        extractedWords.add(newWord)
+                                        Log.d("TalkScreen", "抽出追加: ${newWord.word} (${newWord.wordRuby})")
+                                    }
+                                }
+                                Log.d("TalkScreen", "現在の抽出リスト: $extractedWords")
+                            },
+                            onError = { error ->
+                                Log.e("TalkScreen", "Gemini抽出失敗: $error")
+                            }
+                        )
                     }
                 )
             }
 
-            // テキスト入力ダイアログ（AI候補付き）
+            // キーボード入力ダイアログ
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
-                    onConfirm = {
-                        viewModel.sendMessage(talkId, it, InputType.TEXT)
-                        tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null)
+                    onConfirm = { inputText ->
+                        // 保存＆読み上げ
+                        talksViewModel.sendMessage(talkId, inputText, InputType.TEXT)
+                        tts?.speak(inputText, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
+
+                        // 全履歴 + 今回入力から語彙抽出（追加）
+                        GeminiWord.extractTermsFromHistory(
+                            history = messages.map { it.text } + inputText,
+                            onResult = { terms ->
+                                terms.forEach { newWord ->
+                                    if (extractedWords.none { it.word == newWord.word }) {
+                                        extractedWords.add(newWord)
+                                        Log.d("TalkScreen", "抽出追加: ${newWord.word} (${newWord.wordRuby})")
+                                    }
+                                }
+                                Log.d("TalkScreen", "現在の抽出リスト: $extractedWords")
+                            },
+                            onError = { error ->
+                                Log.e("TalkScreen", "Gemini抽出失敗: $error")
+                            }
+                        )
                     },
                     suggestions = aiSuggestions,
                     isLoading = isGeneratingSuggestions

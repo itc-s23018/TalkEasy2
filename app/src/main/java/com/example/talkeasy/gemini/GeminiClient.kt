@@ -64,22 +64,31 @@ class GeminiClient(
                 }
 
                 try {
+                    Log.d(TAG, "Raw Gemini Response: $rawBody")
+
                     val json = JSONObject(rawBody)
-                    val text = json
-                        .getJSONArray("candidates")
-                        .getJSONObject(0)
-                        .getJSONObject("content")
-                        .getJSONArray("parts")
-                        .getJSONObject(0)
-                        .getString("text")
+                    val candidates = json.optJSONArray("candidates")
 
-                    val suggestions = text
-                        .split("\n")
-                        .map { it.trim() }
-                        .filter { it.isNotBlank() }
+                    if (candidates != null && candidates.length() > 0) {
+                        val content = candidates.getJSONObject(0).optJSONObject("content")
+                        val parts = content?.optJSONArray("parts")
 
-                    Log.d(TAG, "Gemini応答: $suggestions")
-                    onResult(suggestions)
+                        val text = if (parts != null && parts.length() > 0) {
+                            parts.getJSONObject(0).optString("text", "")
+                        } else {
+                            content?.optString("text", "") ?: ""
+                        }
+
+                        val suggestions = text
+                            .split("\n")
+                            .map { it.trim() }
+                            .filter { it.isNotBlank() }
+
+                        Log.d(TAG, "Gemini応答: $suggestions")
+                        onResult(suggestions)
+                    } else {
+                        onError("candidates が空: $rawBody")
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "レスポンス解析失敗: ${e.message}")
                     onError("レスポンス解析失敗: ${e.message}")

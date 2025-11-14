@@ -21,6 +21,9 @@ val apiKey_voice = localProperties["API_KEY_VOICE"] as? String ?: ""
 
 val apiKey_text = localProperties["API_KEY_TEXT"] as? String ?: ""
 
+val apiKey_word = localProperties["API_KEY_WORD"] as? String ?: ""
+
+
 android {
     namespace = "com.example.talkeasy"
     compileSdk = 36
@@ -36,6 +39,7 @@ android {
 
         buildConfigField("String", "API_KEY_VOICE", "\"$apiKey_voice\"")
         buildConfigField("String", "API_KEY_TEXT", "\"$apiKey_text\"")
+        buildConfigField("String", "API_KEY_WORD", "\"$apiKey_word\"")
     }
 
     buildTypes {

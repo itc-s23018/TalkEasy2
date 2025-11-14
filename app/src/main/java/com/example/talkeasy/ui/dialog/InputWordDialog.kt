@@ -37,23 +37,23 @@ import com.example.talkeasy.ui.theme.TalkEasyTheme
 @Composable
 fun InputWordDialog(
     categoryViewModel: CategoryViewModel,
+    initialWord: String = "",       // ← 追加
+    initialWordRuby: String = "",   // ← 追加
     onConfirm: (String, String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var inputWord by remember { mutableStateOf("") }
-    var inputWordRuby by remember { mutableStateOf("") }
+    var inputWord by remember { mutableStateOf(initialWord) }       // ← 初期値セット
+    var inputWordRuby by remember { mutableStateOf(initialWordRuby) } // ← 初期値セット
     var inputCategory by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
-    // ✅ DBからカテゴリ一覧を取得
     val categories by categoryViewModel.categories.collectAsState()
-
     var showInputCategoryDialog by remember { mutableStateOf(false) }
 
     if (showInputCategoryDialog) {
         InputCategoryDialog(
             onConfirm = { newCategory ->
-                categoryViewModel.addCategory(newCategory) // ✅ DBに保存
+                categoryViewModel.addCategory(newCategory)
                 inputCategory = newCategory
                 showInputCategoryDialog = false
             },
@@ -86,7 +86,6 @@ fun InputWordDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // ▼ カテゴリ選択欄
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
@@ -105,7 +104,7 @@ fun InputWordDialog(
                     ) {
                         categories.forEach { category ->
                             DropdownMenuItem(
-                                text = { Text(category.name) }, // ✅ DBの値を表示
+                                text = { Text(category.name) },
                                 onClick = {
                                     inputCategory = category.name
                                     expanded = false
@@ -148,6 +147,7 @@ fun InputWordDialog(
         containerColor = Color.White,
     )
 }
+
 
 
 

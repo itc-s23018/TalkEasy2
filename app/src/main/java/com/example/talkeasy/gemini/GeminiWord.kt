@@ -35,7 +35,7 @@ object GeminiWord {
                     val rawText = results.joinToString("\n").trim()
                     Log.d("GeminiWord", "Gemini応答(JSON): $rawText")
 
-// 余計なコードブロックマーカーを除去
+                    // 余計なコードブロックマーカーを除去
                     val cleaned = rawText
                         .removePrefix("```json")
                         .removePrefix("```")
@@ -60,9 +60,8 @@ object GeminiWord {
                         )
                     }
 
-
                     Log.d("GeminiWord", "抽出結果: $words")
-                    onResult(words)
+                    onResult(words) // ✅ 保存済みチェックは ViewModel 側で行う
                 } catch (e: Exception) {
                     Log.e("GeminiWord", "JSON解析失敗: ${e.message}")
                     onError("JSON解析失敗: ${e.message}")

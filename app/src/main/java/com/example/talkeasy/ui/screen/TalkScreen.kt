@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.InputType
-import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.gemini.GeminiWord
@@ -55,10 +54,13 @@ fun TalkScreen(
     val isGeneratingSuggestions by talksViewModel.isGeneratingSuggestions.collectAsState()
 
     val allWords by wordsViewModel.allWords.collectAsState()
+    val extractedWordsMap by wordsViewModel.extractedWordsMap.collectAsState()
+    val currentExtractedWords = extractedWordsMap[talkId] ?: emptyList()
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showVoiceInputDialog by remember { mutableStateOf(false) }
     var showTextInputDialog by remember { mutableStateOf(false) }
+    var showDictionaryDialog by remember { mutableStateOf(false) }
 
     val micPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
     LaunchedEffect(Unit) {
@@ -81,10 +83,6 @@ fun TalkScreen(
             tts?.shutdown()
         }
     }
-
-    // 抽出結果を累積保持する
-    val extractedWords = remember { mutableStateListOf<Words>() }
-    var showDictionaryDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(talkId) {
         talksViewModel.loadTalk(talkId)
@@ -109,11 +107,13 @@ fun TalkScreen(
             ) {
                 IconButton(
                     onClick = { navController.navigate("tabs/1") },
-                    modifier = Modifier.size(48.dp).align(Alignment.CenterStart)
+                    modifier = Modifier
+                        .size(48.dp)
+                        .align(Alignment.CenterStart)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.back),
-                        contentDescription = "Back",
+                        contentDescription = "Talk",
                         modifier = Modifier.size(40.dp),
                         tint = Color.Black
                     )
@@ -126,7 +126,10 @@ fun TalkScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = talkTitle, fontSize = 20.sp)
-                    IconButton(onClick = { showEditDialog = true }, modifier = Modifier.size(48.dp)) {
+                    IconButton(
+                        onClick = { showEditDialog = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.edit),
                             contentDescription = "Edit",
@@ -136,9 +139,18 @@ fun TalkScreen(
                     }
                 }
 
-                // Checkボタン → 抽出済みリストを表示
+                // チェックボタン（右端）
                 IconButton(
-                    onClick = { showDictionaryDialog = true },
+                    onClick = {
+                        showDictionaryDialog = true
+                        GeminiWord.extractTermsFromHistory(
+                            history = messages.map { it.text },
+                            onResult = { terms ->
+                                wordsViewModel.addExtractedWords(talkId, terms, allWords)
+                            },
+                            onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
+                        )
+                    },
                     modifier = Modifier.size(48.dp).align(Alignment.CenterEnd)
                 ) {
                     Icon(
@@ -149,6 +161,7 @@ fun TalkScreen(
                     )
                 }
             }
+
 
             if (showEditDialog) {
                 EditTilteDialog(
@@ -161,7 +174,6 @@ fun TalkScreen(
                 )
             }
 
-            // メッセージ表示
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -181,16 +193,21 @@ fun TalkScreen(
                 }
             }
 
-            // DictionaryDialog 表示
             if (showDictionaryDialog) {
                 DictionaryDialog(
                     onDismiss = { showDictionaryDialog = false },
-                    words = extractedWords,
+                    words = currentExtractedWords,
                     categoryViewModel = categoryViewModel,
+                    wordsViewModel = wordsViewModel,   // ✅ 追加
+                    talkId = talkId,                   // ✅ 追加
+                    allWords = allWords,               // ✅ 追加
+                    messages = messages.map { it.text }, // ✅ 追加
                     onWordSaved = { word ->
                         wordsViewModel.addWord(word.word, word.wordRuby, word.category)
+                        wordsViewModel.removeExtractedWord(talkId, word)
                     }
                 )
+
             }
 
             MessagesButton(
@@ -201,60 +218,38 @@ fun TalkScreen(
                 },
             )
 
-            // 音声入力ダイアログ
             if (showVoiceInputDialog) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
-                        // 補正＆履歴保存
                         talksViewModel.correctWithFullHistory(talkId, rawText, allWords)
                         showVoiceInputDialog = false
 
-                        // 全履歴 + 今回入力から語彙抽出（追加）
                         GeminiWord.extractTermsFromHistory(
                             history = messages.map { it.text } + rawText,
                             onResult = { terms ->
-                                terms.forEach { newWord ->
-                                    if (extractedWords.none { it.word == newWord.word }) {
-                                        extractedWords.add(newWord)
-                                        Log.d("TalkScreen", "抽出追加: ${newWord.word} (${newWord.wordRuby})")
-                                    }
-                                }
-                                Log.d("TalkScreen", "現在の抽出リスト: $extractedWords")
+                                wordsViewModel.addExtractedWords(talkId, terms, allWords) // ✅ ViewModelでチェック
                             },
-                            onError = { error ->
-                                Log.e("TalkScreen", "Gemini抽出失敗: $error")
-                            }
+                            onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
                         )
                     }
                 )
             }
 
-            // キーボード入力ダイアログ
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
                     onConfirm = { inputText ->
-                        // 保存＆読み上げ
                         talksViewModel.sendMessage(talkId, inputText, InputType.TEXT)
                         tts?.speak(inputText, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
 
-                        // 全履歴 + 今回入力から語彙抽出（追加）
                         GeminiWord.extractTermsFromHistory(
                             history = messages.map { it.text } + inputText,
                             onResult = { terms ->
-                                terms.forEach { newWord ->
-                                    if (extractedWords.none { it.word == newWord.word }) {
-                                        extractedWords.add(newWord)
-                                        Log.d("TalkScreen", "抽出追加: ${newWord.word} (${newWord.wordRuby})")
-                                    }
-                                }
-                                Log.d("TalkScreen", "現在の抽出リスト: $extractedWords")
+                                wordsViewModel.addExtractedWords(talkId, terms, allWords) // ✅ ViewModelでチェック
                             },
-                            onError = { error ->
-                                Log.e("TalkScreen", "Gemini抽出失敗: $error")
-                            }
+                            onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
                         )
                     },
                     suggestions = aiSuggestions,

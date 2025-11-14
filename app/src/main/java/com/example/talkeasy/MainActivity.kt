@@ -50,9 +50,10 @@ class MainActivity : ComponentActivity() {
                             WordsScreen(
                                 viewModel = wordsViewModel,
                                 categoryViewModel = categoryViewModel,
-                                onBackClick = { navController.popBackStack() }
+                                onBackClick = { navController.navigate("tabs/0") } // ← 修正
                             )
                         }
+
 
                     }
                 }

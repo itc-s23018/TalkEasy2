@@ -213,10 +213,11 @@ fun TalkScreen(
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = {
-                    talksViewModel.generateReplySuggestions()
+                    talksViewModel.generateReplySuggestions(allWords)
                     showTextInputDialog = true
                 },
             )
+
 
             if (showVoiceInputDialog) {
                 VoiceInputDialog(

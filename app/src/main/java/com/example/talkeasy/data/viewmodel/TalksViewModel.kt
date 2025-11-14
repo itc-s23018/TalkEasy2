@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
-import com.example.talkeasy.data.entity.Words   // ← これを忘れずに import
+import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.repository.TalksRepository
 import com.example.talkeasy.gemini.GeminiText
 import com.example.talkeasy.gemini.GeminiVoice
@@ -139,8 +139,8 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    // ✅ AIによる返答候補生成
-    fun generateReplySuggestions() {
+    // ✅ AIによる返答候補生成（DB用語も渡す）
+    fun generateReplySuggestions(allWords: List<Words>) {
         val historyTexts = _messages.value.map { it.text }
         if (historyTexts.isEmpty()) return
 
@@ -148,6 +148,7 @@ class TalksViewModel @Inject constructor(
 
         GeminiText.suggestReplyToLatestMessage(
             messages = historyTexts,
+            savedWords = allWords, // ✅ DBの用語を渡す
             onResult = { replies ->
                 _aiSuggestions.value = replies
                 _isGeneratingSuggestions.value = false

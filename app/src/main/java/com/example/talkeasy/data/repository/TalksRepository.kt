@@ -37,6 +37,10 @@ class TalksRepository @Inject constructor(
         talkdao.deleteTalk(talk)
     }
 
+    suspend fun deleteTalkById(talkId: Int) {
+        talkdao.deleteTalkById(talkId)
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     suspend fun deleteTalksOlderThanAWeek() {
         val threshold = LocalDateTime.now().minusWeeks(1)

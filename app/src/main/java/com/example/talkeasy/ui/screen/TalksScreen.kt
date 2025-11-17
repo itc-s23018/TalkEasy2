@@ -7,12 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -26,7 +24,6 @@ import java.time.format.DateTimeFormatter
 import java.time.Duration
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TalksScreen(
     viewModel: TalksViewModel = hiltViewModel(),
@@ -127,7 +124,8 @@ fun TalksScreen(
                                 val formatter = DateTimeFormatter.ofPattern("yy/MM/dd")
                                 val expiryDate = talk.createdAt.plusWeeks(1)
                                 val daysLeft = Duration.between(LocalDateTime.now(), expiryDate).toDays()
-                                val dateColor = if (daysLeft <= 1) Color.Red else Color.Black
+                                val dateColor = if (daysLeft <= 3) Color.Red else Color.Black
+
                                 Text(
                                     talk.createdAt.format(formatter),
                                     modifier = Modifier.fillMaxWidth(),

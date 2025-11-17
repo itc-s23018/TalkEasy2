@@ -15,6 +15,9 @@ interface TalksDao {
     @Delete
     suspend fun deleteTalk(talk: Talks)
 
+    @Query("DELETE FROM talks WHERE id = :talkId")
+    suspend fun deleteTalkById(talkId: Int)
+
     @Query("DELETE FROM talks WHERE createdAt < :threshold")
     suspend fun deleteOldTalks(threshold: LocalDateTime)
 

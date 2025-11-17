@@ -1,29 +1,36 @@
 package com.example.talkeasy.data.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.example.talkeasy.data.DeleteTalkWorker
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.entity.Words
-import com.example.talkeasy.data.entity.User   // ✅ ユーザー情報を追加
+import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.repository.TalksRepository
 import com.example.talkeasy.gemini.GeminiText
 import com.example.talkeasy.gemini.GeminiVoice
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @HiltViewModel
 class TalksViewModel @Inject constructor(
-    private val repository: TalksRepository
+    private val repository: TalksRepository,
+    @ApplicationContext private val context: Context   // ✅ 修正: Qualifierを追加
 ) : ViewModel() {
 
-    // タイトル・トーク一覧・メッセージ一覧
     private val _talkTitle = MutableStateFlow("新しいトーク")
     val talkTitle: StateFlow<String> = _talkTitle
 
@@ -33,11 +40,9 @@ class TalksViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<Messages>>(emptyList())
     val messages: StateFlow<List<Messages>> = _messages
 
-    // 補正中メッセージ（アニメーション表示用）
     private val _tempMessage = MutableStateFlow<Messages?>(null)
     val tempMessage: StateFlow<Messages?> = _tempMessage
 
-    // AI返答候補とローディング状態
     private val _aiSuggestions = MutableStateFlow<List<String>>(emptyList())
     val aiSuggestions: StateFlow<List<String>> = _aiSuggestions
 
@@ -67,7 +72,14 @@ class TalksViewModel @Inject constructor(
     fun createNewTalk(onCreated: (Int) -> Unit) {
         viewModelScope.launch {
             val newId = repository.createTalk()
-            cleanUpOldTalks()
+
+            // ✅ WorkManagerで1週間後に削除タスクを登録
+            val workRequest = OneTimeWorkRequestBuilder<DeleteTalkWorker>()
+                .setInitialDelay(7, TimeUnit.DAYS)
+                .setInputData(workDataOf("talkId" to newId))
+                .build()
+            WorkManager.getInstance(context).enqueue(workRequest)
+
             onCreated(newId)
             loadAllTalks()
         }
@@ -111,12 +123,11 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    // ✅ 会話履歴＋辞書＋ユーザー情報を補正に渡す
     fun correctWithFullHistory(
         talkId: Int,
         rawText: String,
         dbWords: List<Words>,
-        user: User?    // ← ユーザー情報を追加
+        user: User?
     ) {
         viewModelScope.launch {
             val temp = Messages(
@@ -133,7 +144,7 @@ class TalksViewModel @Inject constructor(
                 rawText = rawText,
                 history = historyTexts,
                 dbWords = dbWords,
-                user = user,   // ← ユーザー情報を渡す
+                user = user,
                 onResult = { correctedText ->
                     sendMessage(talkId, correctedText, InputType.VOICE)
                     _tempMessage.value = null
@@ -146,7 +157,6 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    // ✅ AIによる返答候補生成（DB用語も渡す）
     fun generateReplySuggestions(allWords: List<Words>) {
         val historyTexts = _messages.value.map { it.text }
         if (historyTexts.isEmpty()) return
@@ -155,7 +165,7 @@ class TalksViewModel @Inject constructor(
 
         GeminiText.suggestReplyToLatestMessage(
             messages = historyTexts,
-            savedWords = allWords, // ✅ DBの用語を渡す
+            savedWords = allWords,
             onResult = { replies ->
                 _aiSuggestions.value = replies
                 _isGeneratingSuggestions.value = false

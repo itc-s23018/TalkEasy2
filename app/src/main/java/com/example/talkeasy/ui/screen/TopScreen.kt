@@ -35,17 +35,20 @@ fun TopScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // アプリ名表示
             Text(
                 text = stringResource(id = R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.displaySmall
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
+            // ユーザーが登録済みなら挨拶を表示
             if (user != null) {
                 Text("こんにちは、${user.lastName}さん", style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
+            // トーク開始ボタン
             Button(
                 onClick = {
                     val talkId = UUID.randomUUID().toString()
@@ -84,6 +87,7 @@ fun TopScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // マイ辞書ボタン
             Button(
                 onClick = { navController.navigate("words") },
                 modifier = Modifier.size(width = 300.dp, height = 130.dp),
@@ -115,20 +119,23 @@ fun TopScreen(
             }
         }
 
+        // ユーザーアイコンボタン（右上）
         IconButton(
             onClick = { viewModel.showEditDialog() },
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 50.dp, end = 10.dp)
+                .size(50.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.account),
                 contentDescription = "Account",
                 tint = Color.Black,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(50.dp)
             )
         }
 
+        // ユーザー登録ダイアログ
         if (showDialog) {
             InputUserDialog(
                 onConfirm = { lastName, firstName, lastNameRuby, firstNameRuby ->
@@ -145,6 +152,7 @@ fun TopScreen(
             )
         }
 
+        // ユーザー編集ダイアログ
         if (showEditDialog && user != null) {
             EditUserDialog(
                 initialLastName = user.lastName,

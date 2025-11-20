@@ -31,7 +31,7 @@ fun TabRowView(
     val icons = listOf(R.drawable.top, R.drawable.chat)
 
     Surface(
-        modifier = modifier.width(200.dp),
+        modifier = modifier.width(190.dp),
         shape = RoundedCornerShape(50.dp),
         color = Color.White,
         border = BorderStroke(3.dp, Color.Black)
@@ -72,9 +72,3 @@ private fun TabRowPreview() {
     TabRowView(tabIndex = index, onTabChange = { index = it })
 }
 
-@Preview(showBackground = true, name = "Black background", backgroundColor = 0xFF000000L)
-@Composable
-private fun TabRowPreviewBlack() {
-    var index by remember { mutableStateOf(0) }
-    TabRowView(tabIndex = index, onTabChange = { index = it })
-}

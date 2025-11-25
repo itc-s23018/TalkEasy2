@@ -161,7 +161,7 @@ fun TalkScreen(
                         painter = painterResource(id = R.drawable.check),
                         contentDescription = "Check",
                         modifier = Modifier.size(35.dp),
-                        tint = Color.Black
+                        tint = if (currentExtractedWords.isNotEmpty()) Color.Red else Color.Black
                     )
                 }
             }
@@ -202,10 +202,10 @@ fun TalkScreen(
                     onDismiss = { showDictionaryDialog = false },
                     words = currentExtractedWords,
                     categoryViewModel = categoryViewModel,
-                    wordsViewModel = wordsViewModel,   // ✅ 追加
-                    talkId = talkId,                   // ✅ 追加
-                    allWords = allWords,               // ✅ 追加
-                    messages = messages.map { it.text }, // ✅ 追加
+                    wordsViewModel = wordsViewModel,
+                    talkId = talkId,
+                    allWords = allWords,
+                    messages = messages.map { it.text },
                     onWordSaved = { word ->
                         wordsViewModel.addWord(word.word, word.wordRuby, word.category)
                         wordsViewModel.removeExtractedWord(talkId, word)
@@ -257,7 +257,7 @@ fun TalkScreen(
                         GeminiWord.extractTermsFromHistory(
                             history = messages.map { it.text } + inputText,
                             onResult = { terms ->
-                                wordsViewModel.addExtractedWords(talkId, terms, allWords) // ✅ ViewModelでチェック
+                                wordsViewModel.addExtractedWords(talkId, terms, allWords)
                             },
                             onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
                         )

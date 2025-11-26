@@ -21,6 +21,7 @@ interface WordsDao {
     @Query("SELECT * FROM words ORDER BY updatedAt DESC")
     fun getAllWords(): Flow<List<Words>>
 
-    @Query("SELECT * FROM words WHERE category = :category ORDER BY updatedAt DESC")
-    fun getWordsByCategory(category: String): Flow<List<Words>>
+    @Query("SELECT * FROM words WHERE categoryId = :categoryId ORDER BY updatedAt DESC")
+    fun getWordsByCategory(categoryId: Int): Flow<List<Words>>
+
 }

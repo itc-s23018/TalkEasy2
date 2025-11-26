@@ -1,7 +1,6 @@
 package com.example.talkeasy.ui.dialog
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,37 +13,31 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
-import com.example.talkeasy.ui.theme.TalkEasyTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputWordDialog(
     categoryViewModel: CategoryViewModel,
-    initialWord: String = "",       // ← 追加
-    initialWordRuby: String = "",   // ← 追加
-    onConfirm: (String, String, String) -> Unit,
+    initialWord: String = "",
+    initialWordRuby: String = "",
+    onConfirm: (String, String, Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var inputWord by remember { mutableStateOf(initialWord) }       // ← 初期値セット
-    var inputWordRuby by remember { mutableStateOf(initialWordRuby) } // ← 初期値セット
-    var inputCategory by remember { mutableStateOf("") }
+    var inputWord by remember { mutableStateOf(initialWord) }
+    var inputWordRuby by remember { mutableStateOf(initialWordRuby) }
+    var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
     var expanded by remember { mutableStateOf(false) }
 
     val categories by categoryViewModel.categories.collectAsState()
@@ -54,7 +47,9 @@ fun InputWordDialog(
         InputCategoryDialog(
             onConfirm = { newCategory ->
                 categoryViewModel.addCategory(newCategory)
-                inputCategory = newCategory
+                // ✅ 新規追加カテゴリを選択状態にする
+                val added = categories.find { it.name == newCategory }
+                selectedCategoryId = added?.id
                 showInputCategoryDialog = false
             },
             onDismiss = { showInputCategoryDialog = false }
@@ -63,7 +58,9 @@ fun InputWordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("用語を追加", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+        title = {
+            Text("用語を追加", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        },
         text = {
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 OutlinedTextField(
@@ -91,7 +88,9 @@ fun InputWordDialog(
                     onExpandedChange = { expanded = !expanded }
                 ) {
                     OutlinedTextField(
-                        value = inputCategory,
+                        value = selectedCategoryId?.let { id ->
+                            categories.find { it.id == id }?.name ?: ""
+                        } ?: "",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("カテゴリ選択") },
@@ -106,7 +105,7 @@ fun InputWordDialog(
                             DropdownMenuItem(
                                 text = { Text(category.name) },
                                 onClick = {
-                                    inputCategory = category.name
+                                    selectedCategoryId = category.id
                                     expanded = false
                                 }
                             )
@@ -125,8 +124,10 @@ fun InputWordDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (inputWord.isNotEmpty() && inputWordRuby.isNotEmpty() && inputCategory.isNotEmpty()) {
-                        onConfirm(inputWord, inputWordRuby, inputCategory)
+                    val word = inputWord.trim()
+                    val ruby = inputWordRuby.trim()
+                    if (word.isNotEmpty() && ruby.isNotEmpty() && selectedCategoryId != null) {
+                        onConfirm(word, ruby, selectedCategoryId!!)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
@@ -147,7 +148,3 @@ fun InputWordDialog(
         containerColor = Color.White,
     )
 }
-
-
-
-

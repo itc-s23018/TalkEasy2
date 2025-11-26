@@ -14,12 +14,11 @@ import com.example.talkeasy.data.viewmodel.CategoryViewModel
 @Composable
 fun CategorySelector(
     categoryViewModel: CategoryViewModel,
-    onCategorySelected: (String) -> Unit
+    onCategorySelected: (Int?) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedCategory by remember { mutableStateOf("All") }
+    var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
 
-    // ✅ DBからカテゴリ一覧を取得
     val categories by categoryViewModel.categories.collectAsState()
 
     Row(
@@ -36,7 +35,11 @@ fun CategorySelector(
 
         Box {
             TextButton(onClick = { expanded = true }) {
-                Text(selectedCategory)
+                Text(
+                    selectedCategoryId?.let { id ->
+                        categories.find { it.id == id }?.name ?: "All"
+                    } ?: "All"
+                )
                 Icon(
                     painter = painterResource(id = R.drawable.drop),
                     contentDescription = "カテゴリ選択",
@@ -50,19 +53,17 @@ fun CategorySelector(
                 DropdownMenuItem(
                     text = { Text("All") },
                     onClick = {
-                        selectedCategory = "All"
-                        onCategorySelected("All")
+                        selectedCategoryId = null
+                        onCategorySelected(null)
                         expanded = false
                     }
                 )
-
-                // ✅ DBに保存されたカテゴリを表示
                 categories.forEach { category ->
                     DropdownMenuItem(
                         text = { Text(category.name) },
                         onClick = {
-                            selectedCategory = category.name
-                            onCategorySelected(category.name)
+                            selectedCategoryId = category.id
+                            onCategorySelected(category.id)
                             expanded = false
                         }
                     )
@@ -71,3 +72,4 @@ fun CategorySelector(
         }
     }
 }
+

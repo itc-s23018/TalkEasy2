@@ -28,7 +28,7 @@ fun DictionaryDialog(
     onWordSaved: (Words) -> Unit
 ) {
     var selectedWord by remember { mutableStateOf<Words?>(null) }
-    var isLoading by remember { mutableStateOf(false) } // ✅ ローディング状態
+    var isLoading by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
@@ -38,7 +38,6 @@ fun DictionaryDialog(
 
                 when {
                     isLoading -> {
-                        // ✅ ローディング表示
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
                         }
@@ -85,28 +84,30 @@ fun DictionaryDialog(
             categoryViewModel = categoryViewModel,
             initialWord = selectedWord!!.word,
             initialWordRuby = selectedWord!!.wordRuby,
-            onConfirm = { word, ruby, category ->
-                val savedWord = selectedWord!!.copy(word = word, wordRuby = ruby, category = category)
+            onConfirm = { word, ruby, categoryId ->
+                val savedWord = selectedWord!!.copy(
+                    word = word,
+                    wordRuby = ruby,
+                    categoryId = categoryId
+                )
                 onWordSaved(savedWord)
                 wordsViewModel.removeExtractedWord(talkId, selectedWord!!)
                 selectedWord = null
             },
             onDismiss = {
-                // ✅ 閉じたら削除
                 wordsViewModel.removeExtractedWord(talkId, selectedWord!!)
                 selectedWord = null
 
-                // ✅ ローディング開始
                 isLoading = true
                 GeminiWord.extractTermsFromHistory(
                     history = messages,
                     onResult = { terms ->
                         wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                        isLoading = false // ✅ 完了
+                        isLoading = false
                     },
                     onError = { error ->
                         Log.e("DictionaryDialog", "Gemini抽出失敗: $error")
-                        isLoading = false // ✅ エラーでも終了
+                        isLoading = false
                     }
                 )
             }

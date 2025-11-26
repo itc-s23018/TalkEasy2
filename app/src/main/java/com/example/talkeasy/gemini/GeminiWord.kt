@@ -56,7 +56,7 @@ object GeminiWord {
                             word = obj.getString("word"),
                             wordRuby = obj.optString("wordRuby", ""),
                             updatedAt = now,
-                            category = ""
+                            categoryId = -1
                         )
                     }
 
@@ -74,3 +74,4 @@ object GeminiWord {
         )
     }
 }
+

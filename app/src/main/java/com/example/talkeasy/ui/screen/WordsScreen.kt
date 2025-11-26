@@ -3,7 +3,6 @@ package com.example.talkeasy.ui.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,7 +33,7 @@ fun WordsScreen(
     var showInputDialog by remember { mutableStateOf(false) }
     var editingWord by remember { mutableStateOf<Words?>(null) }
     var wordToDelete by remember { mutableStateOf<Words?>(null) }
-    var selectedCategory by remember { mutableStateOf("All") }
+    var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
         topBar = {
@@ -70,14 +69,16 @@ fun WordsScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            // ✅ カテゴリ選択
             CategorySelector(
                 categoryViewModel = categoryViewModel,
-                onCategorySelected = { category ->
-                    selectedCategory = category
+                onCategorySelected = { categoryId ->
+                    selectedCategoryId = categoryId
                 }
             )
 
-            val words by viewModel.getWords(selectedCategory).collectAsState(initial = emptyList())
+            // ✅ 選択カテゴリに応じた用語一覧
+            val words by viewModel.getWords(selectedCategoryId).collectAsState(initial = emptyList())
 
             if (words.isEmpty()) {
                 Box(
@@ -148,38 +149,37 @@ fun WordsScreen(
                         )
                     }
                 }
-
             }
         }
 
-        // 新規追加ダイアログ
+        // ✅ 新規追加ダイアログ
         if (showInputDialog) {
             InputWordDialog(
                 categoryViewModel = categoryViewModel,
-                onConfirm = { word, ruby, category ->
-                    viewModel.addWord(word, ruby, category)
+                onConfirm = { word, ruby, categoryId ->
+                    viewModel.addWord(word.trim(), ruby.trim(), categoryId)
                     showInputDialog = false
                 },
                 onDismiss = { showInputDialog = false }
             )
         }
 
-        // 編集ダイアログ
+        // ✅ 編集ダイアログ
         editingWord?.let { word ->
             EditWordDialog(
                 categoryViewModel = categoryViewModel,
                 initialWord = word.word,
                 initialRuby = word.wordRuby,
-                initialCategory = word.category,
-                onConfirm = { newWord, newRuby, newCategory ->
-                    viewModel.updateWord(word.id, newWord, newRuby, newCategory)
+                initialCategoryId = word.categoryId,
+                onConfirm = { newWord, newRuby, newCategoryId ->
+                    viewModel.updateWord(word.id, newWord.trim(), newRuby.trim(), newCategoryId)
                     editingWord = null
                 },
                 onDismiss = { editingWord = null }
             )
         }
 
-        // 削除確認ダイアログ
+        // ✅ 削除確認ダイアログ
         wordToDelete?.let { word ->
             DeleteWordDialog(
                 word = word,
@@ -192,3 +192,4 @@ fun WordsScreen(
         }
     }
 }
+

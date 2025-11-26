@@ -2,7 +2,7 @@ package com.example.talkeasy.gemini
 
 import com.example.talkeasy.BuildConfig
 import com.example.talkeasy.data.entity.Words
-import kotlin.collections.joinToString
+import com.example.talkeasy.data.entity.Category
 
 object GeminiText {
     private val client = GeminiClient(BuildConfig.API_KEY_TEXT)
@@ -15,7 +15,8 @@ object GeminiText {
 
     fun suggestReplyToLatestMessage(
         messages: List<String>,
-        savedWords: List<Words>, // ✅ DBから渡す
+        savedWords: List<Words>,
+        categories: List<Category>,
         onResult: (List<String>) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -27,9 +28,10 @@ object GeminiText {
         val historyText = messages.dropLast(1).joinToString("\n")
         val latestMessage = messages.last()
 
-        // ✅ 保存済み用語をプロンプトに追加
+        val categoryMap = categories.associateBy({ it.id }, { it.name })
         val wordsText = savedWords.joinToString("\n") { w ->
-            "- ${w.word} (${w.wordRuby}) [${w.category}]"
+            val categoryName = categoryMap[w.categoryId] ?: "Unknown"
+            "- ${w.word} (${w.wordRuby}) [$categoryName]"
         }
 
         val prompt = """
@@ -69,5 +71,4 @@ object GeminiText {
             onError = onError
         )
     }
-
 }

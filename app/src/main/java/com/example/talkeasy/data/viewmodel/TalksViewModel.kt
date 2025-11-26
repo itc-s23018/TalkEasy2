@@ -7,6 +7,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.talkeasy.data.DeleteTalkWorker
+import com.example.talkeasy.data.entity.Category
 import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.entity.Messages
 import com.example.talkeasy.data.entity.Talks
@@ -157,7 +158,7 @@ class TalksViewModel @Inject constructor(
         }
     }
 
-    fun generateReplySuggestions(allWords: List<Words>) {
+    fun generateReplySuggestions(allWords: List<Words>, categories: List<Category>) {
         val historyTexts = _messages.value.map { it.text }
         if (historyTexts.isEmpty()) return
 
@@ -166,6 +167,7 @@ class TalksViewModel @Inject constructor(
         GeminiText.suggestReplyToLatestMessage(
             messages = historyTexts,
             savedWords = allWords,
+            categories = categories,   // ✅ 追加
             onResult = { replies ->
                 _aiSuggestions.value = replies
                 _isGeneratingSuggestions.value = false
@@ -176,4 +178,5 @@ class TalksViewModel @Inject constructor(
             }
         )
     }
+
 }

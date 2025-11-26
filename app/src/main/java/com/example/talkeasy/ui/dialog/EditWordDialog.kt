@@ -32,26 +32,25 @@ fun EditWordDialog(
     categoryViewModel: CategoryViewModel,
     initialWord: String,
     initialRuby: String,
-    initialCategory: String,
-    onConfirm: (String, String, String) -> Unit,
+    initialCategoryId: Int,
+    onConfirm: (String, String, Int) -> Unit,
     onDismiss: () -> Unit
-){
-
+) {
     var editWord by remember { mutableStateOf(initialWord) }
     var editRuby by remember { mutableStateOf(initialRuby) }
-    var editCategory by remember { mutableStateOf(initialCategory) }
+    var selectedCategoryId by remember { mutableStateOf(initialCategoryId) }
     var expanded by remember { mutableStateOf(false) }
 
-
     val categories by categoryViewModel.categories.collectAsState()
-
     var showInputCategoryDialog by remember { mutableStateOf(false) }
 
     if (showInputCategoryDialog) {
         InputCategoryDialog(
             onConfirm = { newCategory ->
-                categoryViewModel.addCategory(newCategory) // ✅ DBに保存
-                editCategory = newCategory
+                categoryViewModel.addCategory(newCategory)
+                // ✅ 新規追加カテゴリを選択状態にする
+                val added = categories.find { it.name == newCategory }
+                selectedCategoryId = added?.id ?: selectedCategoryId
                 showInputCategoryDialog = false
             },
             onDismiss = { showInputCategoryDialog = false }
@@ -60,7 +59,9 @@ fun EditWordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("用語を編集", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+        title = {
+            Text("用語を編集", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        },
         text = {
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 OutlinedTextField(
@@ -83,13 +84,12 @@ fun EditWordDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // ▼ カテゴリ選択欄
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
                 ) {
                     OutlinedTextField(
-                        value = editCategory,
+                        value = categories.find { it.id == selectedCategoryId }?.name ?: "",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("カテゴリ選択") },
@@ -102,9 +102,9 @@ fun EditWordDialog(
                     ) {
                         categories.forEach { category ->
                             DropdownMenuItem(
-                                text = { Text(category.name) }, // ✅ DBの値を表示
+                                text = { Text(category.name) },
                                 onClick = {
-                                    editCategory = category.name
+                                    selectedCategoryId = category.id
                                     expanded = false
                                 }
                             )
@@ -123,8 +123,10 @@ fun EditWordDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (editWord.isNotEmpty() && editRuby.isNotEmpty() && editCategory.isNotEmpty()) {
-                        onConfirm(editWord, editRuby, editCategory)
+                    val word = editWord.trim()
+                    val ruby = editRuby.trim()
+                    if (word.isNotEmpty() && ruby.isNotEmpty() && selectedCategoryId != null) {
+                        onConfirm(word, ruby, selectedCategoryId)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),

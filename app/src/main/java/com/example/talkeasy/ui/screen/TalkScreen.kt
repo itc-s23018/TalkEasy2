@@ -146,13 +146,15 @@ fun TalkScreen(
                 // チェックボタン（右端）
                 IconButton(
                     onClick = {
-                        showDictionaryDialog = true
                         GeminiWord.extractTermsFromHistory(
                             history = messages.map { it.text },
                             onResult = { terms ->
                                 wordsViewModel.addExtractedWords(talkId, terms, allWords)
+                                showDictionaryDialog = true
                             },
-                            onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
+                            onError = { error ->
+                                Log.e("TalkScreen", "Gemini抽出失敗: $error")
+                            }
                         )
                     },
                     modifier = Modifier.size(48.dp).align(Alignment.CenterEnd)
@@ -164,6 +166,7 @@ fun TalkScreen(
                         tint = if (currentExtractedWords.isNotEmpty()) Color.Red else Color.Black
                     )
                 }
+
             }
 
 
@@ -207,20 +210,23 @@ fun TalkScreen(
                     allWords = allWords,
                     messages = messages.map { it.text },
                     onWordSaved = { word ->
-                        wordsViewModel.addWord(word.word, word.wordRuby, word.category)
+                        wordsViewModel.addWord(word.word, word.wordRuby, word.categoryId)
                         wordsViewModel.removeExtractedWord(talkId, word)
                     }
                 )
-
             }
 
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = {
-                    talksViewModel.generateReplySuggestions(allWords)
+                    talksViewModel.generateReplySuggestions(
+                        allWords = allWords,
+                        categories = categoryViewModel.categories.value
+                    )
                     showTextInputDialog = true
                 },
             )
+
 
 
             if (showVoiceInputDialog) {

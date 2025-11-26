@@ -16,9 +16,9 @@ import com.example.talkeasy.data.entity.*
         Talks::class,
         Messages::class,
         Words::class,
-        Category::class   // ✅ Category を追加
+        Category::class
     ],
-    version = 3,   // ✅ バージョンを上げる
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -27,13 +27,12 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun talksDao(): TalksDao
     abstract fun messagesDao(): MessagesDao
     abstract fun wordsDao(): WordsDao
-    abstract fun categoryDao(): CategoryDao   // ✅ 追加
+    abstract fun categoryDao(): CategoryDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // ✅ Migration 1→2 (Messages に inputType 追加)
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
@@ -42,20 +41,50 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // ✅ Migration 2→3 (categories テーブル追加)
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
                     """
-            CREATE TABLE IF NOT EXISTS categories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                name TEXT NOT NULL
-            )
-            """.trimIndent()
+                    CREATE TABLE IF NOT EXISTS categories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL
+                    )
+                    """.trimIndent()
                 )
             }
         }
 
+        // ✅ Migration 3→4 (words テーブルを categoryId に変更)
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // 新しい words テーブル作成
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS words_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        word TEXT NOT NULL,
+                        wordRuby TEXT NOT NULL,
+                        updatedAt TEXT NOT NULL,   -- TEXT に変更（旧テーブルに合わせる）
+                        categoryId INTEGER NOT NULL,
+                        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                database.execSQL(
+                    """
+                    INSERT INTO words_new (id, word, wordRuby, updatedAt, categoryId)
+                    SELECT w.id, w.word, w.wordRuby, w.updatedAt,
+                           COALESCE(c.id, -1)
+                    FROM words w
+                    LEFT JOIN categories c ON w.category = c.name
+                    """.trimIndent()
+                )
+
+                database.execSQL("DROP TABLE words")
+                database.execSQL("ALTER TABLE words_new RENAME TO words")
+            }
+        }
 
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -64,7 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // ✅ Migration を追加
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                     .also { INSTANCE = it }
             }

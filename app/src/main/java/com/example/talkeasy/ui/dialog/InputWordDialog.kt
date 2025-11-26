@@ -19,12 +19,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,15 +45,16 @@ fun InputWordDialog(
 
     val categories by categoryViewModel.categories.collectAsState()
     var showInputCategoryDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope() // ✅ コルーチン用スコープ
 
     if (showInputCategoryDialog) {
         InputCategoryDialog(
             onConfirm = { newCategory ->
-                categoryViewModel.addCategory(newCategory)
-                // ✅ 新規追加カテゴリを選択状態にする
-                val added = categories.find { it.name == newCategory }
-                selectedCategoryId = added?.id
-                showInputCategoryDialog = false
+                scope.launch {
+                    val newId = categoryViewModel.addCategory(newCategory)
+                    selectedCategoryId = newId // ✅ 即選択
+                    showInputCategoryDialog = false
+                }
             },
             onDismiss = { showInputCategoryDialog = false }
         )

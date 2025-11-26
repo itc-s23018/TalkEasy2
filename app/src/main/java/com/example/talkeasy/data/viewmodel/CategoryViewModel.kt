@@ -13,8 +13,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class CategoryViewModel  @Inject constructor
-    (private val dao: CategoryDao) : ViewModel() {
+class CategoryViewModel @Inject constructor(
+    private val dao: CategoryDao
+) : ViewModel() {
 
     val categories: StateFlow<List<Category>> =
         dao.getAllCategories()
@@ -23,13 +24,13 @@ class CategoryViewModel  @Inject constructor
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    fun addCategory(name: String) {
-        viewModelScope.launch {
-            dao.insertCategory(Category(name = name))
-        }
+    suspend fun addCategory(name: String): Int {
+        return dao.insertCategory(Category(name = name)).toInt()
     }
+
 
     fun deleteCategory(category: Category) {
         viewModelScope.launch { dao.deleteCategory(category) }
     }
 }
+

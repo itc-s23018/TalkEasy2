@@ -50,6 +50,7 @@ fun CategorySelector(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
+                // 特別カテゴリとして All を固定で追加
                 DropdownMenuItem(
                     text = { Text("All") },
                     onClick = {
@@ -58,17 +59,22 @@ fun CategorySelector(
                         expanded = false
                     }
                 )
-                categories.forEach { category ->
-                    DropdownMenuItem(
-                        text = { Text(category.name) },
-                        onClick = {
-                            selectedCategoryId = category.id
-                            onCategorySelected(category.id)
-                            expanded = false
-                        }
-                    )
-                }
+
+                // categories 側から "All" を除外して表示
+                categories
+                    .filter { it.name != "All" } // ←ここで除外
+                    .forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.name) },
+                            onClick = {
+                                selectedCategoryId = category.id
+                                onCategorySelected(category.id)
+                                expanded = false
+                            }
+                        )
+                    }
             }
+
         }
     }
 }

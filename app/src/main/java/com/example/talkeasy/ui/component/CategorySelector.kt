@@ -1,5 +1,6 @@
 package com.example.talkeasy.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,14 +73,24 @@ fun CategorySelector(
                         )
                     }
 
-                // ✅ 管理画面へ遷移する項目を追加
                 DropdownMenuItem(
-                    text = { Text("カテゴリを管理") },
+                    text = {
+                        Text(
+                            "カテゴリを管理",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
                     onClick = {
                         expanded = false
                         onManageCategories()
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
                 )
+
+
             }
         }
     }

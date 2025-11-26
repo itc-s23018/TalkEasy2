@@ -7,20 +7,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.talkeasy.data.viewmodel.CategoryViewModel
-import com.example.talkeasy.ui.component.CategoryCard
+import androidx.navigation.NavController
 import com.example.talkeasy.R
+import com.example.talkeasy.data.viewmodel.CategoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesScreen(
     categoryViewModel: CategoryViewModel,
+    navController: NavController,
     onBackClick: () -> Unit
 ) {
-    val categoriesWithCount by categoryViewModel.categoriesWithCount.collectAsState()
+    val categories by categoryViewModel.categories.collectAsState()
 
     Scaffold(
         topBar = {
@@ -43,7 +43,7 @@ fun CategoriesScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            if (categoriesWithCount.isEmpty()) {
+            if (categories.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -51,20 +51,34 @@ fun CategoriesScreen(
                     Text(
                         text = "カテゴリがまだありません",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(categoriesWithCount.filter { it.category.name != "All" }, key = { it.category.id }) { item ->
-                        CategoryCard(
-                            category = item.category,
-                            wordCount = item.wordCount
-                        )
+                    // ✅ 「All」を除外して表示
+                    items(categories.filter { it.name != "All" }, key = { it.id }) { category ->
+                        Surface(
+                            tonalElevation = 2.dp,
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = category.name,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
                     }
                 }
             }

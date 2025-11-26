@@ -24,4 +24,7 @@ interface WordsDao {
     @Query("SELECT * FROM words WHERE categoryId = :categoryId ORDER BY updatedAt DESC")
     fun getWordsByCategory(categoryId: Int): Flow<List<Words>>
 
+    // ✅ カテゴリごとの件数を取得
+    @Query("SELECT COUNT(*) FROM words WHERE categoryId = :categoryId")
+    fun getWordCount(categoryId: Int): Flow<Int>
 }

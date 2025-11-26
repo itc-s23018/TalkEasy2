@@ -18,6 +18,7 @@ import com.example.talkeasy.ui.theme.TalkEasyTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
+import com.example.talkeasy.ui.screen.CategoriesScreen
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 
 @AndroidEntryPoint
@@ -50,9 +51,20 @@ class MainActivity : ComponentActivity() {
                             WordsScreen(
                                 viewModel = wordsViewModel,
                                 categoryViewModel = categoryViewModel,
+                                navController = navController,
                                 onBackClick = { navController.navigate("tabs/0") } // ← 修正
                             )
                         }
+
+                        composable("category_list") {
+                            val categoryViewModel: CategoryViewModel = hiltViewModel()
+                            CategoriesScreen(
+                                categoryViewModel = categoryViewModel,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
+
 
 
                     }

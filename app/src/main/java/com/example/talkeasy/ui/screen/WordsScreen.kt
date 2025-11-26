@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
@@ -28,6 +29,7 @@ import com.example.talkeasy.ui.viewmodel.WordsViewModel
 fun WordsScreen(
     viewModel: WordsViewModel,
     categoryViewModel: CategoryViewModel,
+    navController: NavController,
     onBackClick: () -> Unit
 ) {
     var showInputDialog by remember { mutableStateOf(false) }
@@ -74,7 +76,11 @@ fun WordsScreen(
                 categoryViewModel = categoryViewModel,
                 onCategorySelected = { categoryId ->
                     selectedCategoryId = categoryId
+                },
+                onManageCategories = {
+                    navController.navigate("category_list")
                 }
+
             )
 
             // ✅ 選択カテゴリに応じた用語一覧

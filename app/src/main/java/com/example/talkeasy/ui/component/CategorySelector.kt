@@ -14,7 +14,8 @@ import com.example.talkeasy.data.viewmodel.CategoryViewModel
 @Composable
 fun CategorySelector(
     categoryViewModel: CategoryViewModel,
-    onCategorySelected: (Int?) -> Unit
+    onCategorySelected: (Int?) -> Unit,
+    onManageCategories: () -> Unit // ✅ 管理画面遷移用コールバックを追加
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
@@ -50,7 +51,6 @@ fun CategorySelector(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                // 特別カテゴリとして All を固定で追加
                 DropdownMenuItem(
                     text = { Text("All") },
                     onClick = {
@@ -59,10 +59,8 @@ fun CategorySelector(
                         expanded = false
                     }
                 )
-
-                // categories 側から "All" を除外して表示
                 categories
-                    .filter { it.name != "All" } // ←ここで除外
+                    .filter { it.name != "All" }
                     .forEach { category ->
                         DropdownMenuItem(
                             text = { Text(category.name) },
@@ -73,8 +71,16 @@ fun CategorySelector(
                             }
                         )
                     }
-            }
 
+                // ✅ 管理画面へ遷移する項目を追加
+                DropdownMenuItem(
+                    text = { Text("カテゴリを管理") },
+                    onClick = {
+                        expanded = false
+                        onManageCategories()
+                    }
+                )
+            }
         }
     }
 }

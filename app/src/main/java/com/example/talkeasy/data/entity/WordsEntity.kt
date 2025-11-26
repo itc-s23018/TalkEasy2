@@ -22,7 +22,6 @@ data class Words(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val word: String,
     val wordRuby: String,
-    val updatedAt: LocalDateTime,
-    val categoryId: Int   // ← Category.id を参照
+    val updatedAt: LocalDateTime = LocalDateTime.now(),
+    val categoryId: Int
 )
-

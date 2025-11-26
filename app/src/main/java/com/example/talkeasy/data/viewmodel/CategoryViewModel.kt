@@ -3,14 +3,13 @@ package com.example.talkeasy.data.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.dao.CategoryDao
-import com.example.talkeasy.data.dao.CategoryWithCount
 import com.example.talkeasy.data.dao.WordsDao
 import com.example.talkeasy.data.entity.Category
+import com.example.talkeasy.data.entity.CategoryWithCount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
@@ -25,7 +24,6 @@ class CategoryViewModel @Inject constructor(
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    // ✅ カテゴリごとの件数をリアルタイムで取得
     val categoriesWithCount: StateFlow<List<CategoryWithCount>> =
         categoryDao.getAllCategories()
             .flatMapLatest { dbCategories ->
@@ -45,5 +43,9 @@ class CategoryViewModel @Inject constructor(
 
     fun deleteCategory(category: Category) {
         viewModelScope.launch { categoryDao.deleteCategory(category) }
+    }
+
+    fun getWordsByCategory(categoryId: Int): Flow<List<com.example.talkeasy.data.entity.Words>> {
+        return wordsDao.getWordsByCategory(categoryId)
     }
 }

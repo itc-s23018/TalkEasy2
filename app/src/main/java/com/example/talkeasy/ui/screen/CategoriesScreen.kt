@@ -1,5 +1,6 @@
 package com.example.talkeasy.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,8 +12,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
-import com.example.talkeasy.ui.component.CategoryCard
+import com.example.talkeasy.ui.dialog.DeleteCategoryDialog
 import com.example.talkeasy.R
+import com.example.talkeasy.data.entity.CategoryWithCount
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,6 +23,7 @@ fun CategoriesScreen(
     onBackClick: () -> Unit
 ) {
     val categoriesWithCount by categoryViewModel.categoriesWithCount.collectAsState()
+    var categoryToDelete by remember { mutableStateOf<CategoryWithCount?>(null) }
 
     Scaffold(
         topBar = {
@@ -61,13 +64,87 @@ fun CategoriesScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(categoriesWithCount.filter { it.category.name != "All" }, key = { it.category.id }) { item ->
-                        CategoryCard(
-                            category = item.category,
-                            wordCount = item.wordCount
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { value ->
+                                if (value == SwipeToDismissBoxValue.EndToStart) {
+                                    categoryToDelete = item
+                                }
+                                false
+                            }
+                        )
+
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            modifier = Modifier.height(IntrinsicSize.Min),
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
+                                val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
+                                    Color.Red.copy(alpha = 0.8f)
+                                } else {
+                                    Color.Transparent
+                                }
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(color)
+                                        .padding(end = 16.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.delete),
+                                        contentDescription = "Delete",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            },
+                            content = {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                    shape = MaterialTheme.shapes.medium
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = item.category.name,
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "${item.wordCount} 件",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
                         )
                     }
                 }
             }
+        }
+
+        // ✅ ダイアログ起動
+        categoryToDelete?.let { item ->
+            val words by categoryViewModel.getWordsByCategory(item.category.id).collectAsState(initial = emptyList())
+
+            DeleteCategoryDialog(
+                categoryName = item.category.name,
+                words = words,
+                onConfirm = {
+                    categoryViewModel.deleteCategory(item.category)
+                    categoryToDelete = null
+                },
+                onDismiss = { categoryToDelete = null }
+            )
         }
     }
 }

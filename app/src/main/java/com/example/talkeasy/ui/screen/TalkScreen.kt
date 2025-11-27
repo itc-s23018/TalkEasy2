@@ -160,7 +160,7 @@ fun TalkScreen(
                     modifier = Modifier.size(48.dp).align(Alignment.CenterEnd)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.check),
+                        painter = painterResource(id = R.drawable.spellcheck),
                         contentDescription = "Check",
                         modifier = Modifier.size(35.dp),
                         tint = if (currentExtractedWords.isNotEmpty()) Color.Red else Color.Black

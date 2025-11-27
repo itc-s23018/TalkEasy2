@@ -24,29 +24,29 @@ object GeminiVoice {
         val historyText = history.joinToString("\n")
         val dictionaryText = dbWords.joinToString(", ") { "${it.word}(${it.wordRuby})" }
 
-        // ✅ ユーザー情報を文字列化
         val userText = user?.let {
             "ユーザー名: ${it.lastName}${it.firstName} (${it.lastNameRuby} ${it.firstNameRuby})"
-        } ?: "ユーザー情報なし"
+        } ?: ""
+
+        val userTextSection = if (userText.isNotEmpty()) "ユーザー情報:\n$userText\n" else ""
 
         val prompt = """
-        あなたのタスクは「最新の入力の文」を自然な日本語に補正することです。
-        これまでの会話履歴、マイ辞書、ユーザーの名前情報を参考にして、
-        会話の流れに沿った自然な文になるようにしてください。
-        補正対象は必ず最新の入力のみです。
-
-        会話履歴:
-        $historyText
-
-        マイ辞書:
-        $dictionaryText
-
-        $userText
-
-        最新の入力: 「$rawText」
-
-        補正後の文:
-    """.trimIndent()
+            あなたのタスクは「最新の入力の文」を自然な日本語に補正することです。
+            これまでの会話履歴、マイ辞書、ユーザーの名前情報を参考にして、
+            会話の流れに沿った自然な文になるようにしてください。
+            補正対象は必ず最新の入力のみです。
+            
+            会話履歴:
+            $historyText
+            
+            マイ辞書:
+            $dictionaryText
+            
+            $userTextSection
+            最新の入力: 「$rawText」
+            
+            補正後の文:
+            """.trimIndent()
 
         generateText(
             prompt = prompt,

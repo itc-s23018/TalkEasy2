@@ -36,8 +36,9 @@ object GeminiText {
 
         val prompt = """
         以下は会話の履歴と保存済みの専門用語です。
-        最後のメッセージに対して、自然で適切な返答を3つ提案してください。
-        可能であれば保存済み用語を活用してください。
+        最後のメッセージに対して、会話の流れに沿った自然な返答を3つ提案してください。
+        返答はチャット風で、短すぎず長すぎない一文程度にしてください。
+        保存済み用語を活用できる場合は取り入れてください。
 
         会話履歴:
         $historyText
@@ -48,7 +49,7 @@ object GeminiText {
         最後のメッセージ: 「$latestMessage」
 
         返答の提案:
-    """.trimIndent()
+        """.trimIndent()
 
         GeminiVoice.generateText(
             prompt = prompt,
@@ -62,7 +63,8 @@ object GeminiText {
                         val start = line.indexOf("「")
                         val end = line.indexOf("」")
                         if (start != -1 && end != -1 && end > start) {
-                            line.substring(start + 1, end)
+                            val sentence = line.substring(start + 1, end).trim()
+                            if (sentence.length in 10..60) sentence else null
                         } else null
                     }
                     .take(3)

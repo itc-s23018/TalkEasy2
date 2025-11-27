@@ -27,20 +27,23 @@ fun CategorySelector(
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "カテゴリ：",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.bodyLarge
         )
+
+        Spacer(modifier = Modifier.width(12.dp))
 
         Box {
             TextButton(onClick = { expanded = true }) {
                 Text(
                     selectedCategoryId?.let { id ->
                         categories.find { it.id == id }?.name ?: "All"
-                    } ?: "All"
+                    } ?: "All",
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Icon(
                     painter = painterResource(id = R.drawable.drop),
@@ -89,8 +92,6 @@ fun CategorySelector(
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.primary)
                 )
-
-
             }
         }
     }

@@ -37,6 +37,7 @@ import com.example.talkeasy.ui.dialog.VoiceInputDialog
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -66,6 +67,9 @@ fun TalkScreen(
     var showTextInputDialog by remember { mutableStateOf(false) }
     var showDictionaryDialog by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
     val micPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
     LaunchedEffect(Unit) {
         if (!micPermissionState.status.isGranted) {
@@ -93,7 +97,9 @@ fun TalkScreen(
         talksViewModel.loadMessages(talkId)
     }
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -176,6 +182,10 @@ fun TalkScreen(
                     onConfirm = {
                         talksViewModel.updateTalkTitle(talkId, it)
                         showEditDialog = false
+                        // ✅ 更新完了時に Snackbar を表示
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("「${it}」が更新されました")
+                        }
                     },
                     onDismiss = { showEditDialog = false }
                 )

@@ -18,11 +18,15 @@ import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 @Composable
 fun TopScreen(
-    viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    snackbarHostState: SnackbarHostState,
+    coroutineScope: CoroutineScope
 ) {
     val navController = LocalNavController.current
     val user = viewModel.user
@@ -147,6 +151,9 @@ fun TopScreen(
                             firstNameRuby = firstNameRuby
                         )
                     )
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("ユーザー情報を登録しました")
+                    }
                 },
                 onDismiss = { viewModel.dismissDialog() }
             )
@@ -161,6 +168,9 @@ fun TopScreen(
                 initialFirstNameRudy = user.firstNameRuby,
                 onConfirm = { ln, fn, lnr, fnr ->
                     viewModel.updateUser(ln, fn, lnr, fnr)
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("ユーザー情報を更新しました")
+                    }
                 },
                 onDismiss = { viewModel.dismissEditDialog() }
             )

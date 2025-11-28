@@ -23,6 +23,7 @@ import com.example.talkeasy.ui.dialog.EditWordDialog
 import com.example.talkeasy.ui.dialog.InputWordDialog
 import com.example.talkeasy.ui.dialog.DeleteWordDialog
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +37,10 @@ fun WordsScreen(
     var editingWord by remember { mutableStateOf<Words?>(null) }
     var wordToDelete by remember { mutableStateOf<Words?>(null) }
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
+
+    // ✅ Snackbar の状態を保持
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -64,7 +69,8 @@ fun WordsScreen(
                     tint = Color.White
                 )
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 前面に表示
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -80,7 +86,6 @@ fun WordsScreen(
                 onManageCategories = {
                     navController.navigate("category_list")
                 }
-
             )
 
             // ✅ 選択カテゴリに応じた用語一覧
@@ -165,6 +170,9 @@ fun WordsScreen(
                 onConfirm = { word, ruby, categoryId ->
                     viewModel.addWord(word.trim(), ruby.trim(), categoryId)
                     showInputDialog = false
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("「${word}」が追加されました")
+                    }
                 },
                 onDismiss = { showInputDialog = false }
             )
@@ -180,6 +188,9 @@ fun WordsScreen(
                 onConfirm = { newWord, newRuby, newCategoryId ->
                     viewModel.updateWord(word.id, newWord.trim(), newRuby.trim(), newCategoryId)
                     editingWord = null
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("「${newWord}」が更新されました")
+                    }
                 },
                 onDismiss = { editingWord = null }
             )
@@ -192,10 +203,12 @@ fun WordsScreen(
                 onConfirm = {
                     viewModel.deleteWord(word)
                     wordToDelete = null
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("「${word.word}」が削除されました")
+                    }
                 },
                 onDismiss = { wordToDelete = null }
             )
         }
     }
 }
-

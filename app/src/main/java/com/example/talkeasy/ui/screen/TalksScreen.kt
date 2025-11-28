@@ -19,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.viewmodel.TalksViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.Duration
@@ -32,6 +33,10 @@ fun TalksScreen(
     val talks by viewModel.talks.collectAsState()
     var talkToDelete by remember { mutableStateOf<Talks?>(null) }
 
+    // Snackbar の状態を保持
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
     if (talkToDelete != null) {
         AlertDialog(
             onDismissRequest = { talkToDelete = null },
@@ -40,7 +45,13 @@ fun TalksScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        talkToDelete?.let(viewModel::deleteTalk)
+                        talkToDelete?.let {
+                            viewModel.deleteTalk(it)
+                            // Snackbar 表示
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("「${it.title}」が消されました")
+                            }
+                        }
                         talkToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -72,7 +83,8 @@ fun TalksScreen(
             CenterAlignedTopAppBar(
                 title = { Text("トーク一覧画面") }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 ここで前面に表示
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier

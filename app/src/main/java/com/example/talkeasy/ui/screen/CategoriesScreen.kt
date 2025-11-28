@@ -15,6 +15,7 @@ import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.ui.dialog.DeleteCategoryDialog
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.CategoryWithCount
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,6 +25,9 @@ fun CategoriesScreen(
 ) {
     val categoriesWithCount by categoryViewModel.categoriesWithCount.collectAsState()
     var categoryToDelete by remember { mutableStateOf<CategoryWithCount?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -39,7 +43,8 @@ fun CategoriesScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 Snackbar を前面に表示
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -132,7 +137,6 @@ fun CategoriesScreen(
             }
         }
 
-        // ✅ ダイアログ起動
         categoryToDelete?.let { item ->
             val words by categoryViewModel.getWordsByCategory(item.category.id).collectAsState(initial = emptyList())
 
@@ -142,6 +146,10 @@ fun CategoriesScreen(
                 onConfirm = {
                     categoryViewModel.deleteCategory(item.category)
                     categoryToDelete = null
+                    // 👇 Snackbar 表示
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("「${item.category.name}」カテゴリが削除されました")
+                    }
                 },
                 onDismiss = { categoryToDelete = null }
             )

@@ -11,6 +11,9 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun insertUser(user: User) = dao.insert(user)
 
+    override suspend fun updateAiAssist(userId: Int, enabled: Boolean) =
+        dao.updateAiAssist(userId, enabled)
+
     override suspend fun update(user: User) = dao.update(user)
 
     override suspend fun getUser(): User? = dao.getUser()

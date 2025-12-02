@@ -15,4 +15,5 @@ data class User(
     val lastNameRuby: String,
     val firstName: String,
     val firstNameRuby: String,
+    val aiAssist: Boolean = false
 )

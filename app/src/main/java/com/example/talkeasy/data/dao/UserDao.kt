@@ -14,6 +14,9 @@ interface UserDao {
     @Insert
     suspend fun insert(user: User)
 
+    @Query("UPDATE user SET aiAssist = :enabled WHERE user_Id = :userId")
+    suspend fun updateAiAssist(userId: Int, enabled: Boolean)
+
     @Update
     suspend fun update(user: User)
 

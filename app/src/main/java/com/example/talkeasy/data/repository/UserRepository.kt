@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     suspend fun insertUser(user:User)
+
+    suspend fun updateAiAssist(userId: Int, enabled: Boolean)
+
     suspend fun update(user: User)
     suspend fun getUser(): User?
 }

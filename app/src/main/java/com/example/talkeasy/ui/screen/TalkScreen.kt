@@ -149,30 +149,32 @@ fun TalkScreen(
                     }
                 }
 
-                // チェックボタン（右端）
-                IconButton(
-                    onClick = {
-                        GeminiWord.extractTermsFromHistory(
-                            history = messages.map { it.text },
-                            onResult = { terms ->
-                                wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                                showDictionaryDialog = true
-                            },
-                            onError = { error ->
-                                Log.e("TalkScreen", "Gemini抽出失敗: $error")
-                            }
+                if (user?.aiAssist == true) {
+                    IconButton(
+                        onClick = {
+                            GeminiWord.extractTermsFromHistory(
+                                history = messages.map { it.text },
+                                onResult = { terms ->
+                                    wordsViewModel.addExtractedWords(talkId, terms, allWords)
+                                    showDictionaryDialog = true
+                                },
+                                onError = { error ->
+                                    Log.e("TalkScreen", "Gemini抽出失敗: $error")
+                                }
+                            )
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterEnd)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.spellcheck),
+                            contentDescription = "Check",
+                            modifier = Modifier.size(35.dp),
+                            tint = if (currentExtractedWords.isNotEmpty()) Color.Red else Color.Black
                         )
-                    },
-                    modifier = Modifier.size(48.dp).align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.spellcheck),
-                        contentDescription = "Check",
-                        modifier = Modifier.size(35.dp),
-                        tint = if (currentExtractedWords.isNotEmpty()) Color.Red else Color.Black
-                    )
+                    }
                 }
-
             }
 
 
@@ -243,21 +245,27 @@ fun TalkScreen(
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
-                        talksViewModel.correctWithFullHistory(
-                            talkId = talkId,
-                            rawText = rawText,
-                            dbWords = allWords,
-                            user = user   // ✅ ユーザー情報を渡す
-                        )
-                        showVoiceInputDialog = false
+                        if (user?.aiAssist == true) {
+                            // AIアシスト有効時 → Gemini補正を使う
+                            talksViewModel.correctWithFullHistory(
+                                talkId = talkId,
+                                rawText = rawText,
+                                dbWords = allWords,
+                                user = user
+                            )
 
-                        GeminiWord.extractTermsFromHistory(
-                            history = messages.map { it.text } + rawText,
-                            onResult = { terms ->
-                                wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                            },
-                            onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
-                        )
+                            GeminiWord.extractTermsFromHistory(
+                                history = messages.map { it.text } + rawText,
+                                onResult = { terms ->
+                                    wordsViewModel.addExtractedWords(talkId, terms, allWords)
+                                },
+                                onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
+                            )
+                        } else {
+                            talksViewModel.sendMessage(talkId, rawText, InputType.VOICE)
+                        }
+
+                        showVoiceInputDialog = false
                     }
                 )
             }
@@ -270,18 +278,22 @@ fun TalkScreen(
                         tts?.speak(inputText, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
 
-                        GeminiWord.extractTermsFromHistory(
-                            history = messages.map { it.text } + inputText,
-                            onResult = { terms ->
-                                wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                            },
-                            onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
-                        )
+                        if (user?.aiAssist == true) {
+                            // AIアシスト有効時のみ Gemini による用語抽出を実行
+                            GeminiWord.extractTermsFromHistory(
+                                history = messages.map { it.text } + inputText,
+                                onResult = { terms ->
+                                    wordsViewModel.addExtractedWords(talkId, terms, allWords)
+                                },
+                                onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
+                            )
+                        }
                     },
-                    suggestions = aiSuggestions,
-                    isLoading = isGeneratingSuggestions
+                    suggestions = if (user?.aiAssist == true) aiSuggestions else emptyList(),
+                    isLoading = if (user?.aiAssist == true) isGeneratingSuggestions else false
                 )
             }
+
         }
     }
 }

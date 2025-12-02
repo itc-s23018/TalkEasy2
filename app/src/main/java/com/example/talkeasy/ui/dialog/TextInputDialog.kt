@@ -17,7 +17,7 @@ fun TextInputDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (String) -> Unit,
     suggestions: List<String> = emptyList(),
-    isLoading: Boolean = false // ← 提案中かどうかを受け取る
+    isLoading: Boolean = false
 ) {
     var text by remember { mutableStateOf("") }
 
@@ -27,6 +27,7 @@ fun TextInputDialog(
         title = { Text("テキスト入力", fontSize = 20.sp) },
         text = {
             Column {
+                // 入力欄
                 TextField(
                     value = text,
                     onValueChange = { text = it },
@@ -36,32 +37,34 @@ fun TextInputDialog(
                         .padding(bottom = 12.dp)
                 )
 
-                Text("言いたいことはこれ？", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+                if (suggestions.isNotEmpty() || isLoading) {
+                    Text("言いたいことはこれ？", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                if (isLoading) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    suggestions.forEach {
-                        Card(
+                    if (isLoading) {
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable { text = it },
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Text(
-                                text = it,
-                                fontSize = 18.sp,
-                                modifier = Modifier.padding(12.dp)
-                            )
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        suggestions.forEach {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable { text = it },
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
+                            ) {
+                                Text(
+                                    text = it,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -90,9 +93,10 @@ fun TextInputDialog(
     )
 }
 
-@Preview(showBackground = true, name = "TextInputDialog Preview")
+
+@Preview(showBackground = true, name = "TextInputDialog Preview (有効時)")
 @Composable
-fun TextInputDialogPreview() {
+fun TextInputDialogPreviewEnabled() {
     TextInputDialog(
         onDismissRequest = {},
         onConfirm = {},
@@ -100,6 +104,18 @@ fun TextInputDialogPreview() {
             "それは面白いですね！",
             "もっと詳しく教えてください！",
             "それについてどう思いますか？"
-        )
+        ),
+        isLoading = false
+    )
+}
+
+@Preview(showBackground = true, name = "TextInputDialog Preview (無効時)")
+@Composable
+fun TextInputDialogPreviewDisabled() {
+    TextInputDialog(
+        onDismissRequest = {},
+        onConfirm = {},
+        suggestions = emptyList(),
+        isLoading = false         
     )
 }

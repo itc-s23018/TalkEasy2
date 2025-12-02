@@ -1,19 +1,7 @@
 package com.example.talkeasy.ui.dialog
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,10 +17,11 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun AI_AssistDialog(
+    aiEnabledInitial: Boolean,   // ← ユーザー情報から渡す
     onDismiss: () -> Unit,
-    onToggle: (Boolean) -> Unit // ← 切り替えた瞬間に呼び出し元へ通知
+    onToggle: (Boolean) -> Unit
 ) {
-    var aiEnabled by remember { mutableStateOf(false) }
+    var aiEnabled by remember { mutableStateOf(aiEnabledInitial) } // ← 初期値を反映
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -70,29 +59,30 @@ fun AI_AssistDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // トグルスイッチ（明るい青）
+                // トグルスイッチ（横に「AIを有効化」と固定表示）
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("AIアシストを有効化", style = MaterialTheme.typography.bodyLarge)
+                    Text("AIを有効化", style = MaterialTheme.typography.bodyLarge)
                     Switch(
                         checked = aiEnabled,
                         onCheckedChange = {
                             aiEnabled = it
-                            onToggle(it) // ← 切り替えた瞬間に保存処理を呼び出す
+                            onToggle(it) // ← 呼び出し元に通知
                         },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color(0xFF42A5F5), // 明るい青 (Light Blue 400)
-                            checkedTrackColor = Color(0xFF90CAF9), // トラックも淡い青
+                            checkedThumbColor = Color(0xFF42A5F5),
+                            checkedTrackColor = Color(0xFF90CAF9),
                             uncheckedThumbColor = Color.Gray,
                             uncheckedTrackColor = Color.LightGray
                         )
                     )
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 注意事項（赤文字の箇条書き）
+                // 注意事項
                 Text(
                     "Google アカウントとの連携が必要です",
                     color = Color.Red,
@@ -101,6 +91,22 @@ fun AI_AssistDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("閉じる")
+                    }
+                }
             }
         }
     }
@@ -111,10 +117,9 @@ fun AI_AssistDialog(
 fun AI_AssistDialogPreview() {
     Surface {
         AI_AssistDialog(
+            aiEnabledInitial = true, // ← プレビュー用に true を渡す
             onDismiss = {},
             onToggle = { enabled -> println("AIアシスト: $enabled") }
         )
     }
 }
-
-

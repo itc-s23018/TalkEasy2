@@ -18,7 +18,7 @@ import com.example.talkeasy.data.entity.*
         Words::class,
         Category::class
     ],
-    version = 4,
+    version = 5, // ← 4 → 5 に更新
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -33,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        // Migration 1→2
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
@@ -41,6 +42,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration 2→3
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
@@ -54,17 +56,16 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // ✅ Migration 3→4 (words テーブルを categoryId に変更)
+        // Migration 3→4 (words テーブルを categoryId に変更)
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // 新しい words テーブル作成
                 database.execSQL(
                     """
                     CREATE TABLE IF NOT EXISTS words_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         word TEXT NOT NULL,
                         wordRuby TEXT NOT NULL,
-                        updatedAt TEXT NOT NULL,   -- TEXT に変更（旧テーブルに合わせる）
+                        updatedAt TEXT NOT NULL,
                         categoryId INTEGER NOT NULL,
                         FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE CASCADE
                     )
@@ -86,6 +87,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // ✅ Migration 4→5 (User テーブルに aiAssistEnabled を追加)
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE user ADD COLUMN aiAssistEnabled INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
@@ -93,7 +103,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                     .also { INSTANCE = it }
             }

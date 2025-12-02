@@ -16,9 +16,9 @@ import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.ui.LocalNavController
-import com.example.talkeasy.ui.component.RightDrawer
 import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
+import com.example.talkeasy.ui.dialog.AI_AssistDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -29,12 +29,13 @@ fun TopScreen(
     viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
-    onOpenDrawer: () -> Unit // ← 追加: ドロワーを開くためのコールバック
+    onOpenDrawer: () -> Unit
 ) {
     val navController = LocalNavController.current
     val user = viewModel.user
     val showDialog = viewModel.showUserInputDialog
     val showEditDialog = viewModel.showUserEditDialog
+    val showAiAssistDialog = viewModel.showAiAssistDialog   // 👈 追加
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold { paddingValues ->
@@ -182,4 +183,23 @@ fun TopScreen(
             onDismiss = { viewModel.dismissEditDialog() }
         )
     }
+
+    if (showAiAssistDialog && user != null) {
+        AI_AssistDialog(
+            aiEnabledInitial = user.aiAssist,
+            onDismiss = { viewModel.dismissAiAssistDialog() },
+            onToggle = { enabled ->
+                viewModel.updateAiAssist(enabled)
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        if (enabled) "AIアシストを有効化しました"
+                        else "AIアシストを無効化しました"
+                    )
+                }
+            }
+        )
+    }
+
+
+
 }

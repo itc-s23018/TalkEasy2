@@ -27,6 +27,10 @@ class TopViewModel @Inject constructor(
     var showUserEditDialog by mutableStateOf(false)
         private set
 
+    // AIアシストダイアログ表示フラグ
+    var showAiAssistDialog by mutableStateOf(false)
+        private set
+
     init {
         viewModelScope.launch {
             try {
@@ -42,11 +46,13 @@ class TopViewModel @Inject constructor(
         }
     }
 
+    // 初回ユーザー登録 → AIアシストダイアログを表示
     fun registerUser(user: User) {
         viewModelScope.launch {
             userRepository.insertUser(user)
             this@TopViewModel.user = user
             showUserInputDialog = false
+            showAiAssistDialog = true
         }
     }
 
@@ -77,11 +83,31 @@ class TopViewModel @Inject constructor(
         showUserInputDialog = false
     }
 
+    // 👇 追加: ダイアログを開く関数
+    fun openAiAssistDialog() {
+        showAiAssistDialog = true
+    }
+
+    fun dismissAiAssistDialog() {
+        showAiAssistDialog = false
+    }
+
+    // AIアシスト有効化状態を更新
+    fun updateAiAssist(enabled: Boolean) {
+        viewModelScope.launch {
+            user?.let {
+                val updated = it.copy(aiAssist = enabled)
+                userRepository.update(updated)
+                user = updated
+            }
+        }
+    }
+
+    // 新しいトーク作成
     fun createNewTalk(title: String, onCreated: (Int) -> Unit) {
         viewModelScope.launch {
             val talkId = talksRepository.createTalk()
             onCreated(talkId)
         }
     }
-
 }

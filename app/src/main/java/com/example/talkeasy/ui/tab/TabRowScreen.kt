@@ -9,10 +9,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.ui.LocalNavController
+import com.example.talkeasy.ui.component.RightDrawer
 import com.example.talkeasy.ui.screen.TalksScreen
 import com.example.talkeasy.ui.screen.TopScreen
-import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -23,15 +25,23 @@ fun TabRowScreen(modifier: Modifier = Modifier, initialTabIndex: Int = 0) {
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+
+    var drawerOpen by remember { mutableStateOf(false) }
+
+
+    val vm: TopViewModel = hiltViewModel()
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // メイン画面（タブ切り替え）
         when (tabIndex) {
             0 -> TopScreen(
                 snackbarHostState = snackbarHostState,
-                coroutineScope = coroutineScope
+                coroutineScope = coroutineScope,
+                onOpenDrawer = { drawerOpen = true }
             )
             1 -> TalksScreen(
                 onTalkClick = { talk ->
@@ -40,20 +50,32 @@ fun TabRowScreen(modifier: Modifier = Modifier, initialTabIndex: Int = 0) {
             )
         }
 
+        // タブとSnackbar
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 👇 SnackbarHost をタブの前に配置（オーバーレイ表示）
             SnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            // タブはそのまま下に配置
             TabRowView(tabIndex = tabIndex, onTabChange = { tabIndex = it })
         }
+
+        RightDrawer(
+            isOpen = drawerOpen,
+            onClose = { drawerOpen = false },
+            onUserEdit = {
+                vm.showEditDialog()
+                drawerOpen = false
+            },
+            onSetting = {
+                // 今は何もしない
+                drawerOpen = false
+            },
+            content = {}
+        )
     }
 }

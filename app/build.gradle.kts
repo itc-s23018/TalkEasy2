@@ -4,6 +4,7 @@ import kotlin.apply
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.google.dagger.hilt)
@@ -116,4 +117,18 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     implementation(libs.okhttp)
+
+    // Firebase BoM
+    implementation(platform(libs.firebase.bom))
+
+    // Firebase SDKs
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+
+    // Google Sign-In
+    implementation(libs.play.services.auth)
+
+    // Coil (画像読み込みライブラリ)
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
 }

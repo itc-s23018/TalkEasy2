@@ -6,4 +6,6 @@ plugins {
     alias(libs.plugins.google.devtools.ksp) apply false
     alias(libs.plugins.google.dagger.hilt) apply false
     alias(libs.plugins.room) apply false
+    alias(libs.plugins.google.services) apply false
+
 }

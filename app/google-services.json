@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "723112721418",
+    "project_id": "talkeasy-870bf",
+    "storage_bucket": "talkeasy-870bf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:723112721418:android:892670503acb728552f3f3",
+        "android_client_info": {
+          "package_name": "com.example.talkeasy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "723112721418-gbtgakbp9mm0ak3p56sn1h7nu47866e8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.talkeasy",
+            "certificate_hash": "e4529a4a8812dfb688d57c57597be6efb969aee7"
+          }
+        },
+        {
+          "client_id": "723112721418-5mof6ailmc0ofpufgi6ghtu0jgkmvld2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAl3RCe__orFrtG17xuF31SLbKMkdrY-6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "723112721418-5mof6ailmc0ofpufgi6ghtu0jgkmvld2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

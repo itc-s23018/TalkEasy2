@@ -21,29 +21,61 @@ import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.ui.screen.CategoriesScreen
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 
+// Firebase / Google Sign-In
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private lateinit var auth: FirebaseAuth
+    private lateinit var googleSignInClient: GoogleSignInClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // FirebaseAuth インスタンス
+        auth = FirebaseAuth.getInstance()
+
+        // Google サインインオプション
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
         setContent {
             TalkEasyTheme {
                 val navController = rememberNavController()
 
                 CompositionLocalProvider(LocalNavController provides navController) {
-                    NavHost(navController = navController, startDestination = "tabs/0") {
+                    NavHost(
+                        navController = navController,
+                        startDestination = "tabs/0"   // ← 常にタブ画面から開始
+                    ) {
                         composable(
                             "tabs/{tabIndex}",
                             arguments = listOf(navArgument("tabIndex") { type = NavType.IntType })
                         ) { backStackEntry ->
                             val tabIndex = backStackEntry.arguments?.getInt("tabIndex") ?: 0
-                            TabRowScreen(modifier = Modifier, initialTabIndex = tabIndex)
+                            TabRowScreen(
+                                modifier = Modifier,
+                                initialTabIndex = tabIndex,
+                                googleSignInClient = googleSignInClient,
+                                auth = auth
+                            )
                         }
+
                         composable("talk/{talkId}") { backStackEntry ->
                             val talkId = backStackEntry.arguments?.getString("talkId")?.toIntOrNull()
                             if (talkId != null) {
                                 TalkScreen(talkId = talkId)
                             }
                         }
+
                         composable("words") {
                             val wordsViewModel: WordsViewModel = hiltViewModel()
                             val categoryViewModel: CategoryViewModel = hiltViewModel()
@@ -52,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = wordsViewModel,
                                 categoryViewModel = categoryViewModel,
                                 navController = navController,
-                                onBackClick = { navController.navigate("tabs/0") } // ← 修正
+                                onBackClick = { navController.navigate("tabs/0") }
                             )
                         }
 
@@ -63,10 +95,6 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { navController.popBackStack() }
                             )
                         }
-
-
-
-
                     }
                 }
             }

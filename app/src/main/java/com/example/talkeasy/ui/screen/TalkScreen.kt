@@ -149,7 +149,8 @@ fun TalkScreen(
                     }
                 }
 
-                if (user?.aiAssist == true) {
+                // 👇 ログイン済みなら AI アシストボタンを表示
+                if (topViewModel.isLoggedIn) {
                     IconButton(
                         onClick = {
                             GeminiWord.extractTermsFromHistory(
@@ -177,14 +178,12 @@ fun TalkScreen(
                 }
             }
 
-
             if (showEditDialog) {
                 EditTilteDialog(
                     initialTalkTitle = talkTitle,
                     onConfirm = {
                         talksViewModel.updateTalkTitle(talkId, it)
                         showEditDialog = false
-                        // ✅ 更新完了時に Snackbar を表示
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("「${it}」が更新されました")
                         }
@@ -239,21 +238,17 @@ fun TalkScreen(
                 },
             )
 
-
-
             if (showVoiceInputDialog) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
-                        if (user?.aiAssist == true) {
-                            // AIアシスト有効時 → Gemini補正を使う
+                        if (topViewModel.isLoggedIn) {
                             talksViewModel.correctWithFullHistory(
                                 talkId = talkId,
                                 rawText = rawText,
                                 dbWords = allWords,
                                 user = user
                             )
-
                             GeminiWord.extractTermsFromHistory(
                                 history = messages.map { it.text } + rawText,
                                 onResult = { terms ->
@@ -264,7 +259,6 @@ fun TalkScreen(
                         } else {
                             talksViewModel.sendMessage(talkId, rawText, InputType.VOICE)
                         }
-
                         showVoiceInputDialog = false
                     }
                 )
@@ -278,8 +272,7 @@ fun TalkScreen(
                         tts?.speak(inputText, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
 
-                        if (user?.aiAssist == true) {
-                            // AIアシスト有効時のみ Gemini による用語抽出を実行
+                        if (topViewModel.isLoggedIn) {
                             GeminiWord.extractTermsFromHistory(
                                 history = messages.map { it.text } + inputText,
                                 onResult = { terms ->
@@ -289,11 +282,10 @@ fun TalkScreen(
                             )
                         }
                     },
-                    suggestions = if (user?.aiAssist == true) aiSuggestions else emptyList(),
-                    isLoading = if (user?.aiAssist == true) isGeneratingSuggestions else false
+                    suggestions = if (topViewModel.isLoggedIn) aiSuggestions else emptyList(),
+                    isLoading = if (topViewModel.isLoggedIn) isGeneratingSuggestions else false
                 )
             }
-
         }
     }
 }

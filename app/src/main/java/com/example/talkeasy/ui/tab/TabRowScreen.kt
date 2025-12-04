@@ -1,7 +1,5 @@
 package com.example.talkeasy.ui.tab
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -72,22 +70,35 @@ fun TabRowScreen(
         )
 
         if (showAiAssistDialog) {
-            AI_AssistDialog(
-                userEmail = vm.firebaseUser?.email,
-                userName = vm.firebaseUser?.displayName,
-                userPhotoUrl = vm.firebaseUser?.photoUrl?.toString(),
-                isLoggedIn = vm.firebaseUser != null,
-                onDismiss = { vm.dismissAiAssistDialog() },
-                onLoginClick = { onLoginClick() },
-                onLogoutClick = {
-                    vm.logout {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Googleアカウントからログアウトしました")
+            if (vm.isLoggedIn) {
+                // ログイン済み → AIアシスト利用可能
+                AI_AssistDialog(
+                    userEmail = vm.firebaseUser?.email,
+                    userName = vm.firebaseUser?.displayName,
+                    userPhotoUrl = vm.firebaseUser?.photoUrl?.toString(),
+                    isLoggedIn = true,
+                    onDismiss = { vm.dismissAiAssistDialog() },
+                    onLoginClick = { /* すでにログイン済みなので何もしない */ },
+                    onLogoutClick = {
+                        vm.logout {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Googleアカウントからログアウトしました")
+                            }
                         }
                     }
-                }
-            )
+                )
+            } else {
+                // 未ログイン → ログインを促す
+                AI_AssistDialog(
+                    userEmail = null,
+                    userName = null,
+                    userPhotoUrl = null,
+                    isLoggedIn = false,
+                    onDismiss = { vm.dismissAiAssistDialog() },
+                    onLoginClick = { onLoginClick() },
+                    onLogoutClick = { /* 未ログインなので何もしない */ }
+                )
+            }
         }
     }
 }
-

@@ -31,6 +31,10 @@ class TopViewModel @Inject constructor(
     var firebaseUser by mutableStateOf<FirebaseUser?>(auth.currentUser)
         private set
 
+    // ログイン状態を判定する便利プロパティ
+    val isLoggedIn: Boolean
+        get() = firebaseUser != null
+
     // ログイン時の idToken を保持（外部からは saveIdToken() で設定）
     private var lastIdToken: String? = null
     fun saveIdToken(token: String) {

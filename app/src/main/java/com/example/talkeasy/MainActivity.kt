@@ -3,6 +3,7 @@ package com.example.talkeasy
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
@@ -17,7 +18,9 @@ import com.example.talkeasy.ui.tab.TabRowScreen
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
+import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.ui.screen.CategoriesScreen
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 
@@ -25,6 +28,7 @@ import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 
 @AndroidEntryPoint
@@ -33,13 +37,38 @@ class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
 
+    // Googleログイン結果を受け取るランチャー
+    private val signInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account.idToken
+                if (idToken != null) {
+                    val vm: TopViewModel = ViewModelProvider(this)[TopViewModel::class.java]
+                    // 👇 ログイン処理と同時に idToken を保存
+                    vm.loginWithGoogle(
+                        idToken,
+                        onSuccess = {
+                            vm.saveIdToken(idToken)
+                        },
+                        onError = { e -> e.printStackTrace() }
+                    )
+
+                }
+            } catch (e: ApiException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // FirebaseAuth インスタンス
         auth = FirebaseAuth.getInstance()
 
-        // Google サインインオプション
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
@@ -54,7 +83,7 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalNavController provides navController) {
                     NavHost(
                         navController = navController,
-                        startDestination = "tabs/0"   // ← 常にタブ画面から開始
+                        startDestination = "tabs/0"
                     ) {
                         composable(
                             "tabs/{tabIndex}",
@@ -65,7 +94,11 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier,
                                 initialTabIndex = tabIndex,
                                 googleSignInClient = googleSignInClient,
-                                auth = auth
+                                auth = auth,
+                                onLoginClick = {
+                                    val signInIntent = googleSignInClient.signInIntent
+                                    signInLauncher.launch(signInIntent)
+                                }
                             )
                         }
 
@@ -79,7 +112,6 @@ class MainActivity : ComponentActivity() {
                         composable("words") {
                             val wordsViewModel: WordsViewModel = hiltViewModel()
                             val categoryViewModel: CategoryViewModel = hiltViewModel()
-
                             WordsScreen(
                                 viewModel = wordsViewModel,
                                 categoryViewModel = categoryViewModel,

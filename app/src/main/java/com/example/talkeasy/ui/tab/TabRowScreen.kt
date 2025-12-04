@@ -16,11 +16,18 @@ import com.example.talkeasy.ui.component.RightDrawer
 import com.example.talkeasy.ui.screen.TalksScreen
 import com.example.talkeasy.ui.screen.TopScreen
 import com.example.talkeasy.ui.dialog.AI_AssistDialog
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TabRowScreen(modifier: Modifier = Modifier, initialTabIndex: Int = 0) {
+fun TabRowScreen(
+    modifier: Modifier = Modifier,
+    initialTabIndex: Int = 0,
+    googleSignInClient: GoogleSignInClient,
+    auth: FirebaseAuth,
+    onLoginClick: () -> Unit
+) {
     val navController = LocalNavController.current
     var tabIndex by remember { mutableStateOf(initialTabIndex) }
 
@@ -30,72 +37,57 @@ fun TabRowScreen(modifier: Modifier = Modifier, initialTabIndex: Int = 0) {
     var drawerOpen by remember { mutableStateOf(false) }
 
     val vm: TopViewModel = hiltViewModel()
-    val user = vm.user
     val showAiAssistDialog = vm.showAiAssistDialog
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // メイン画面（タブ切り替え）
+    Box(modifier = modifier.fillMaxSize().padding(16.dp)) {
         when (tabIndex) {
             0 -> TopScreen(
                 snackbarHostState = snackbarHostState,
                 coroutineScope = coroutineScope,
-                onOpenDrawer = { drawerOpen = true }
+                onOpenDrawer = { drawerOpen = true },
+                auth = auth,
+                onLoginClick = { onLoginClick() }
             )
             1 -> TalksScreen(
-                onTalkClick = { talk ->
-                    navController.navigate("talk/${talk.id}")
-                }
+                onTalkClick = { talk -> navController.navigate("talk/${talk.id}") }
             )
         }
 
-        // タブとSnackbar
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.fillMaxWidth()
-            )
+            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.fillMaxWidth())
             TabRowView(tabIndex = tabIndex, onTabChange = { tabIndex = it })
         }
 
-        // 右ドロワー
         RightDrawer(
             isOpen = drawerOpen,
             onClose = { drawerOpen = false },
-            onUserEdit = {
-                vm.showEditDialog()
-                drawerOpen = false
-            },
-            onSetting = {
-                vm.openAiAssistDialog()
-                drawerOpen = false
-            },
+            onUserEdit = { vm.showEditDialog(); drawerOpen = false },
+            onSetting = { vm.openAiAssistDialog(); drawerOpen = false },
             content = {}
         )
 
-        // AIアシストダイアログ
-        if (showAiAssistDialog && user != null) {
+        if (showAiAssistDialog) {
             AI_AssistDialog(
-                aiEnabledInitial = user.aiAssist,   // ← ユーザー情報から初期値を渡す
+                userEmail = vm.firebaseUser?.email,
+                userName = vm.firebaseUser?.displayName,
+                userPhotoUrl = vm.firebaseUser?.photoUrl?.toString(),
+                isLoggedIn = vm.firebaseUser != null,
                 onDismiss = { vm.dismissAiAssistDialog() },
-                onToggle = { enabled ->
-                    vm.updateAiAssist(enabled)
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            if (enabled) "AIアシストを有効化しました"
-                            else "AIアシストを無効化しました"
-                        )
+                onLoginClick = { onLoginClick() },
+                onLogoutClick = {
+                    vm.logout {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Googleアカウントからログアウトしました")
+                        }
                     }
                 }
             )
         }
     }
 }
+

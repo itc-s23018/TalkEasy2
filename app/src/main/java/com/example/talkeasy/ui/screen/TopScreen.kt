@@ -19,6 +19,7 @@ import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
 import com.example.talkeasy.ui.dialog.AI_AssistDialog
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -29,13 +30,15 @@ fun TopScreen(
     viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
-    onOpenDrawer: () -> Unit
+    onOpenDrawer: () -> Unit,
+    auth: FirebaseAuth,                // 👈 追加: FirebaseAuthを渡す
+    onLoginClick: () -> Unit           // 👈 追加: MainActivityから渡す
 ) {
     val navController = LocalNavController.current
     val user = viewModel.user
     val showDialog = viewModel.showUserInputDialog
     val showEditDialog = viewModel.showUserEditDialog
-    val showAiAssistDialog = viewModel.showAiAssistDialog   // 👈 追加
+    val showAiAssistDialog = viewModel.showAiAssistDialog
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold { paddingValues ->
@@ -60,6 +63,7 @@ fun TopScreen(
                         Spacer(modifier = Modifier.height(20.dp))
                     }
 
+                    // トーク開始ボタン
                     Button(
                         onClick = {
                             val talkId = UUID.randomUUID().toString()
@@ -98,6 +102,7 @@ fun TopScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // マイ辞書ボタン
                     Button(
                         onClick = { navController.navigate("words") },
                         modifier = Modifier.size(width = 300.dp, height = 130.dp),
@@ -183,23 +188,4 @@ fun TopScreen(
             onDismiss = { viewModel.dismissEditDialog() }
         )
     }
-
-    if (showAiAssistDialog && user != null) {
-        AI_AssistDialog(
-            aiEnabledInitial = user.aiAssist,
-            onDismiss = { viewModel.dismissAiAssistDialog() },
-            onToggle = { enabled ->
-                viewModel.updateAiAssist(enabled)
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(
-                        if (enabled) "AIアシストを有効化しました"
-                        else "AIアシストを無効化しました"
-                    )
-                }
-            }
-        )
-    }
-
-
-
 }

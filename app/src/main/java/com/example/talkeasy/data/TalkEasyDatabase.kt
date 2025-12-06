@@ -16,9 +16,10 @@ import com.example.talkeasy.data.entity.*
         Talks::class,
         Messages::class,
         Words::class,
-        Category::class
+        Category::class,
+        AuthToken::class   // 👈 追加
     ],
-    version = 5, // ← 4 → 5 に更新
+    version = 6, // 👈 バージョンを更新
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -28,6 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messagesDao(): MessagesDao
     abstract fun wordsDao(): WordsDao
     abstract fun categoryDao(): CategoryDao
+    abstract fun authTokenDao(): AuthTokenDao   // 👈 追加
 
     companion object {
         @Volatile
@@ -87,11 +89,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // ✅ Migration 4→5 (User テーブルに aiAssistEnabled を追加)
+        // Migration 4→5 (User テーブルに aiAssistEnabled を追加)
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL(
                     "ALTER TABLE user ADD COLUMN aiAssistEnabled INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
+        // Migration 5→6 (auth_tokens テーブル追加)
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS auth_tokens (
+                        uid TEXT PRIMARY KEY NOT NULL,
+                        idToken TEXT NOT NULL,
+                        createdAt TEXT NOT NULL
+                    )
+                    """.trimIndent()
                 )
             }
         }
@@ -103,7 +120,13 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5,
+                        MIGRATION_5_6
+                    )
                     .build()
                     .also { INSTANCE = it }
             }

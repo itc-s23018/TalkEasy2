@@ -1,6 +1,7 @@
 package com.example.talkeasy.data
 
 import android.content.Context
+import com.example.talkeasy.data.dao.AuthTokenDao
 import com.example.talkeasy.data.dao.CategoryDao
 import com.example.talkeasy.data.dao.MessagesDao
 import com.example.talkeasy.data.dao.TalksDao
@@ -27,6 +28,7 @@ object DatabaseModule {
     @Provides fun provideTalksDao(db: AppDatabase): TalksDao = db.talksDao()
     @Provides fun provideMessagesDao(db: AppDatabase): MessagesDao = db.messagesDao()
     @Provides fun provideWordsDao(db: AppDatabase): WordsDao = db.wordsDao()
+    @Provides fun provideCategoryDao(db: AppDatabase): CategoryDao = db.categoryDao()
 
-    @Provides  fun provideCategoryDao(db: AppDatabase): CategoryDao = db.categoryDao()
+    @Provides fun provideAuthTokenDao(db: AppDatabase): AuthTokenDao = db.authTokenDao() // 👈 追加
 }

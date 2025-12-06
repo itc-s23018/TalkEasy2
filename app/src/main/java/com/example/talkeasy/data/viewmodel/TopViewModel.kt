@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.repository.TalksRepository
 import com.example.talkeasy.data.repository.UserRepository
+import com.example.talkeasy.data.repository.AuthTokenRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -20,7 +21,8 @@ import javax.inject.Inject
 class TopViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val talksRepository: TalksRepository,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val authTokenRepository: AuthTokenRepository
 ) : ViewModel() {
 
     // アプリ内ユーザー情報
@@ -35,10 +37,21 @@ class TopViewModel @Inject constructor(
     val isLoggedIn: Boolean
         get() = firebaseUser != null
 
-    // ログイン時の idToken を保持（外部からは saveIdToken() で設定）
+    // 最後に取得した idToken（メモリ保持）
     private var lastIdToken: String? = null
+
     fun saveIdToken(token: String) {
         lastIdToken = token
+        firebaseUser?.uid?.let { uid ->
+            viewModelScope.launch {
+                authTokenRepository.saveToken(uid, token) // DBに保存
+            }
+        }
+    }
+
+    suspend fun loadIdToken(): String? {
+        val uid = firebaseUser?.uid ?: return null
+        return authTokenRepository.getToken(uid)
     }
 
     // ダイアログ表示フラグ
@@ -108,8 +121,21 @@ class TopViewModel @Inject constructor(
         auth.signInWithCredential(credential)
             .addOnSuccessListener {
                 Log.d("TopViewModel", "Google login success")
-                saveIdToken(idToken)   // 保存
-                onSuccess()
+
+                // FirebaseAuth から最新の ID トークンを取得
+                auth.currentUser?.getIdToken(true)
+                    ?.addOnSuccessListener { result ->
+                        val freshToken = result.token
+                        if (freshToken != null) {
+                            saveIdToken(freshToken) // 最新トークンを保存（DBにも）
+                            Log.d("TopViewModel", "Saved latest idToken")
+                        }
+                        onSuccess()
+                    }
+                    ?.addOnFailureListener { e ->
+                        Log.w("TopViewModel", "Failed to get latest idToken", e)
+                        onError(e)
+                    }
             }
             .addOnFailureListener { e ->
                 Log.w("TopViewModel", "Google login failed", e)
@@ -117,35 +143,18 @@ class TopViewModel @Inject constructor(
             }
     }
 
+
+    // ログアウト処理（DBからも削除）
     fun logout(onSuccess: () -> Unit) {
+        val uid = firebaseUser?.uid
         auth.signOut()
         firebaseUser = null
         user = null
+        viewModelScope.launch {
+            uid?.let { authTokenRepository.deleteToken(it) } // 👈 ログアウト時に削除
+        }
         onSuccess()
     }
-
-    // アカウント削除処理（再認証付き）
-//    fun deleteAccount(onSuccess: () -> Unit, onError: (Exception) -> Unit) {
-//        val currentUser = auth.currentUser
-//        val token = lastIdToken
-//        if (currentUser != null && token != null) {
-//            val credential = GoogleAuthProvider.getCredential(token, null)
-//            currentUser.reauthenticate(credential)
-//                .addOnSuccessListener {
-//                    currentUser.delete()
-//                        .addOnSuccessListener {
-//                            firebaseUser = null
-//                            user = null
-//                            lastIdToken = null
-//                            onSuccess()
-//                        }
-//                        .addOnFailureListener { e -> onError(e) }
-//                }
-//                .addOnFailureListener { e -> onError(e) }
-//        } else {
-//            onError(Exception("No current user or token"))
-//        }
-//    }
 
     // 新しいトーク作成
     fun createNewTalk(title: String, onCreated: (Int) -> Unit) {

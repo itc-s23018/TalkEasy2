@@ -1,6 +1,7 @@
 package com.example.talkeasy.data.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.OneTimeWorkRequestBuilder
@@ -14,8 +15,10 @@ import com.example.talkeasy.data.entity.Talks
 import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.repository.TalksRepository
-import com.example.talkeasy.gemini.GeminiText
-import com.example.talkeasy.gemini.GeminiVoice
+import com.example.talkeasy.gemini.GeminiApiService
+import com.example.talkeasy.gemini.GeminiRequest
+import com.example.talkeasy.gemini.GeminiResponse
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -23,13 +26,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @HiltViewModel
 class TalksViewModel @Inject constructor(
     private val repository: TalksRepository,
-    @ApplicationContext private val context: Context   // ✅ 修正: Qualifierを追加
+    private val geminiApi: GeminiApiService,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _talkTitle = MutableStateFlow("新しいトーク")
@@ -74,7 +79,6 @@ class TalksViewModel @Inject constructor(
         viewModelScope.launch {
             val newId = repository.createTalk()
 
-            // ✅ WorkManagerで1週間後に削除タスクを登録
             val workRequest = OneTimeWorkRequestBuilder<DeleteTalkWorker>()
                 .setInitialDelay(7, TimeUnit.DAYS)
                 .setInputData(workDataOf("talkId" to newId))
@@ -124,6 +128,13 @@ class TalksViewModel @Inject constructor(
         }
     }
 
+    /** Firebase ID Token を取得 */
+    private suspend fun getIdToken(): String? {
+        val user = FirebaseAuth.getInstance().currentUser ?: return null
+        return user.getIdToken(false).await().token
+    }
+
+    /** ✅ 音声入力補正 (サーバー呼び出し版) */
     fun correctWithFullHistory(
         talkId: Int,
         rawText: String,
@@ -140,43 +151,67 @@ class TalksViewModel @Inject constructor(
             _tempMessage.value = temp
 
             val historyTexts = _messages.value.map { it.text }
+            val idToken = getIdToken() ?: run {
+                sendMessage(talkId, rawText, InputType.VOICE)
+                _tempMessage.value = null
+                return@launch
+            }
 
-            GeminiVoice.correctSpeechTextWithContext(
-                rawText = rawText,
+            val request = GeminiRequest(
+                idToken = idToken,
+                prompt = rawText,
+                mode = "voice",
                 history = historyTexts,
                 dbWords = dbWords,
-                user = user,
-                onResult = { correctedText ->
-                    sendMessage(talkId, correctedText, InputType.VOICE)
-                    _tempMessage.value = null
-                },
-                onError = { error ->
-                    sendMessage(talkId, rawText, InputType.VOICE)
-                    _tempMessage.value = null
-                }
+                user = user
             )
+
+            try {
+                val response: GeminiResponse = geminiApi.correctVoice(request)
+                Log.d("TalksViewModel", "GeminiVoice Response: $response")
+                val correctedText = response.extractCorrectedText() ?: rawText
+                sendMessage(talkId, correctedText, InputType.VOICE)
+            } catch (e: Exception) {
+                Log.e("TalksViewModel", "GeminiVoice Error: ${e.message}", e)
+                sendMessage(talkId, rawText, InputType.VOICE)
+            } finally {
+                _tempMessage.value = null
+            }
         }
     }
 
+    /** ✅ 返答提案 (サーバー呼び出し版) */
     fun generateReplySuggestions(allWords: List<Words>, categories: List<Category>) {
         val historyTexts = _messages.value.map { it.text }
         if (historyTexts.isEmpty()) return
 
         _isGeneratingSuggestions.value = true
 
-        GeminiText.suggestReplyToLatestMessage(
-            messages = historyTexts,
-            savedWords = allWords,
-            categories = categories,   // ✅ 追加
-            onResult = { replies ->
-                _aiSuggestions.value = replies
+        viewModelScope.launch {
+            val idToken = getIdToken() ?: run {
+                _aiSuggestions.value = listOf("ログインが必要です")
                 _isGeneratingSuggestions.value = false
-            },
-            onError = { error ->
-                _aiSuggestions.value = listOf("エラー: $error")
+                return@launch
+            }
+
+            val request = GeminiRequest(
+                idToken = idToken,
+                prompt = "",
+                mode = "text",
+                history = historyTexts,
+                dbWords = allWords
+            )
+
+            try {
+                val response: GeminiResponse = geminiApi.suggestReplies(request)
+                Log.d("TalksViewModel", "GeminiText Response: $response")
+                _aiSuggestions.value = response.extractReplySuggestions()
+            } catch (e: Exception) {
+                Log.e("TalksViewModel", "GeminiText Error: ${e.message}", e)
+                _aiSuggestions.value = listOf("エラー: ${e.message}")
+            } finally {
                 _isGeneratingSuggestions.value = false
             }
-        )
+        }
     }
-
 }

@@ -153,16 +153,12 @@ fun TalkScreen(
                 if (topViewModel.isLoggedIn) {
                     IconButton(
                         onClick = {
-                            GeminiWord.extractTermsFromHistory(
+                            wordsViewModel.extractWordsFromServer(
+                                talkId = talkId,
                                 history = messages.map { it.text },
-                                onResult = { terms ->
-                                    wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                                    showDictionaryDialog = true
-                                },
-                                onError = { error ->
-                                    Log.e("TalkScreen", "Gemini抽出失敗: $error")
-                                }
+                                allWords = allWords
                             )
+                            showDictionaryDialog = true
                         },
                         modifier = Modifier
                             .size(48.dp)
@@ -230,6 +226,7 @@ fun TalkScreen(
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = {
+                    // ✅ 返答提案をサーバー経由で呼び出す
                     talksViewModel.generateReplySuggestions(
                         allWords = allWords,
                         categories = categoryViewModel.categories.value
@@ -243,18 +240,18 @@ fun TalkScreen(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
                         if (topViewModel.isLoggedIn) {
+                            // ✅ 音声補正をサーバー経由で呼び出す
                             talksViewModel.correctWithFullHistory(
                                 talkId = talkId,
                                 rawText = rawText,
                                 dbWords = allWords,
                                 user = user
                             )
-                            GeminiWord.extractTermsFromHistory(
+                            // ✅ 用語抽出も呼び出す
+                            wordsViewModel.extractWordsFromServer(
+                                talkId = talkId,
                                 history = messages.map { it.text } + rawText,
-                                onResult = { terms ->
-                                    wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                                },
-                                onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
+                                allWords = allWords
                             )
                         } else {
                             talksViewModel.sendMessage(talkId, rawText, InputType.VOICE)
@@ -273,12 +270,11 @@ fun TalkScreen(
                         showTextInputDialog = false
 
                         if (topViewModel.isLoggedIn) {
-                            GeminiWord.extractTermsFromHistory(
+                            // ✅ 用語抽出も呼び出す
+                            wordsViewModel.extractWordsFromServer(
+                                talkId = talkId,
                                 history = messages.map { it.text } + inputText,
-                                onResult = { terms ->
-                                    wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                                },
-                                onError = { error -> Log.e("TalkScreen", "Gemini抽出失敗: $error") }
+                                allWords = allWords
                             )
                         }
                     },

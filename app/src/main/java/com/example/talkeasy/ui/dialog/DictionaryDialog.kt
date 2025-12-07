@@ -15,6 +15,7 @@ import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.gemini.GeminiWord
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun DictionaryDialog(
@@ -29,6 +30,7 @@ fun DictionaryDialog(
 ) {
     var selectedWord by remember { mutableStateOf<Words?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 4.dp) {
@@ -99,17 +101,15 @@ fun DictionaryDialog(
                 selectedWord = null
 
                 isLoading = true
-                GeminiWord.extractTermsFromHistory(
-                    history = messages,
-                    onResult = { terms ->
-                        wordsViewModel.addExtractedWords(talkId, terms, allWords)
-                        isLoading = false
-                    },
-                    onError = { error ->
-                        Log.e("DictionaryDialog", "Gemini抽出失敗: $error")
-                        isLoading = false
-                    }
-                )
+                coroutineScope.launch {
+                    wordsViewModel.extractWordsFromServer(
+                        talkId = talkId,
+                        history = messages,
+                        allWords = allWords
+                    )
+                    // ✅ 非同期処理が終わった後にローディングを消す
+                    isLoading = false
+                }
             }
         )
     }

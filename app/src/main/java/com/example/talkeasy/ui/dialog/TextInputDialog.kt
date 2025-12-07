@@ -116,6 +116,6 @@ fun TextInputDialogPreviewDisabled() {
         onDismissRequest = {},
         onConfirm = {},
         suggestions = emptyList(),
-        isLoading = false         
+        isLoading = false
     )
 }

@@ -95,9 +95,20 @@ fun TalkScreen(
     }
 
     LaunchedEffect(talkId) {
+        // トークとメッセージをロード
         talksViewModel.loadTalk(talkId)
         talksViewModel.loadMessages(talkId)
+
+        // ✅ ログイン済みなら、画面オープン時に用語抽出を実行
+        if (topViewModel.isLoggedIn) {
+            wordsViewModel.extractWordsFromServer(
+                talkId = talkId,
+                history = talksViewModel.messages.value.map { it.text },
+                allWords = wordsViewModel.allWords.value
+            )
+        }
     }
+
 
     // メッセージリストのスクロール状態を管理
     val scrollState = rememberScrollState()

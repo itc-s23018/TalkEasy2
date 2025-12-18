@@ -1,65 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-    <component name="deploymentTargetSelector">
-        <selectionStates>
-            <SelectionState runConfigName="app">
-                <option name="selectionMode" value="DROPDOWN" />
-                <DropdownSelection timestamp="2025-11-28T00:43:53.409384067Z">
-                    <Target type="DEFAULT_BOOT">
-                        <handle>
-                            <DeviceId pluginId="PhysicalDevice" identifier="serial=1f7413103e5c" />
-                        </handle>
-                    </Target>
-                </DropdownSelection>
-                <DialogSelection />
-            </SelectionState>
-            <SelectionState runConfigName="VoiceMessageBubblePreviewCorrecting">
-                <option name="selectionMode" value="DROPDOWN" />
-            </SelectionState>
-            <SelectionState runConfigName="WordsScreenPreview">
-                <option name="selectionMode" value="DROPDOWN" />
-            </SelectionState>
-            <SelectionState runConfigName="<?xml version="1.0" encoding="UTF-8"?>
-            <project version="4">
-                <component name="deploymentTargetSelector">
-                    <selectionStates>
-                        <SelectionState runConfigName="app">
-                            <option name="selectionMode" value="DROPDOWN" />
-                            <DropdownSelection timestamp="2025-11-28T00:43:53.409384067Z">
-                                <Target type="DEFAULT_BOOT">
-                                    <handle>
-                                        <DeviceId pluginId="PhysicalDevice" identifier="serial=1f7413103e5c" />
-                                    </handle>
-                                </Target>
-                            </DropdownSelection>
-                            <DialogSelection />
-                        </SelectionState>
-                        <SelectionState runConfigName="VoiceMessageBubblePreviewCorrecting">
-                            <option name="selectionMode" value="DROPDOWN" />
-                        </SelectionState>
-                        <SelectionState runConfigName="WordsScreenPreview">
-                            <option name="selectionMode" value="DROPDOWN" />
-                        </SelectionState>
-                        <SelectionState runConfigName="InputWordDialogPreview">
-                            <option name="selectionMode" value="DROPDOWN" />
-                        </SelectionState>
-                        <SelectionState runConfigName="InputUserDialogPreview">
-                            <option name="selectionMode" value="DROPDOWN" />
-                        </SelectionState>
-                        <SelectionState runConfigName="AI_AssistDialogPreview">
-                            <option name="selectionMode" value="DROPDOWN" />
-                        </SelectionState>
-                    </selectionStates>
-                </component>
-            </project>InputWordDialogPreview">
-                <option name="selectionMode" value="DROPDOWN" />
-            </SelectionState>
-            <SelectionState runConfigName="InputUserDialogPreview">
-                <option name="selectionMode" value="DROPDOWN" />
-            </SelectionState>
-            <SelectionState runConfigName="AI_AssistDialogPreview">
-                <option name="selectionMode" value="DROPDOWN" />
-            </SelectionState>
-        </selectionStates>
-    </component>
+  <component name="deploymentTargetSelector">
+    <selectionStates>
+      <SelectionState runConfigName="app">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+    </selectionStates>
+  </component>
 </project>

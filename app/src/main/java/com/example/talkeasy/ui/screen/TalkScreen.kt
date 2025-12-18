@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -95,6 +97,13 @@ fun TalkScreen(
     LaunchedEffect(talkId) {
         talksViewModel.loadTalk(talkId)
         talksViewModel.loadMessages(talkId)
+    }
+
+    // メッセージリストのスクロール状態を管理
+    val scrollState = rememberScrollState()
+    LaunchedEffect(messages.size) {
+        // messages の数が変わるたびに（新しいメッセージが追加されるたびに）一番下までスクロール
+        scrollState.animateScrollTo(scrollState.maxValue)
     }
 
     Scaffold(
@@ -193,7 +202,7 @@ fun TalkScreen(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState) // rememberScrollState() を scrollState に変更
             ) {
                 messages.forEach { message ->
                     MessageBubble(

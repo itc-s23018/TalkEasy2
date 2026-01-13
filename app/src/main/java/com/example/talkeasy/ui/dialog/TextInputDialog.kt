@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.talkeasy.R
 
+// テキスト入力用のダイアログ
 @Composable
 fun TextInputDialog(
     onDismissRequest: () -> Unit,
@@ -19,6 +20,7 @@ fun TextInputDialog(
     suggestions: List<String> = emptyList(),
     isLoading: Boolean = false
 ) {
+    // 入力中のテキストを保持する状態変数
     var text by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -27,7 +29,7 @@ fun TextInputDialog(
         title = { Text("テキスト入力", fontSize = 20.sp) },
         text = {
             Column {
-                // 入力欄
+                // テキスト入力フィールド
                 TextField(
                     value = text,
                     onValueChange = { text = it },
@@ -51,6 +53,7 @@ fun TextInputDialog(
                             CircularProgressIndicator()
                         }
                     } else {
+                        // 候補リスト
                         suggestions.forEach {
                             Card(
                                 modifier = Modifier

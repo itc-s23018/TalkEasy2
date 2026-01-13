@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.data.entity.Words
 
+// 単語を削除する前に確認するためのダイアログ
 @Composable
 fun DeleteWordDialog(
     word: Words,

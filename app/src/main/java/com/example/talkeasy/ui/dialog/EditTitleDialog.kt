@@ -20,12 +20,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+// トークのタイトルを編集するためのダイアログ
 @Composable
 fun EditTilteDialog(
     initialTalkTitle: String,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 入力されたトークタイトルを保持する状態変数
     var talkTitle by remember { mutableStateOf(initialTalkTitle) }
 
     AlertDialog(
@@ -35,6 +37,7 @@ fun EditTilteDialog(
         },
 
         text = {
+            // トークタイトル入力フィールド
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 OutlinedTextField(
                     value = talkTitle,

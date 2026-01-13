@@ -25,10 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import kotlinx.coroutines.launch
 
+// 新しい単語を追加するためのダイアログ
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputWordDialog(
@@ -38,21 +38,23 @@ fun InputWordDialog(
     onConfirm: (String, String, Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 入力された単語、ルビ、選択されたカテゴリIDを保持する状態変数
     var inputWord by remember { mutableStateOf(initialWord) }
     var inputWordRuby by remember { mutableStateOf(initialWordRuby) }
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
+
     var expanded by remember { mutableStateOf(false) }
 
     val categories by categoryViewModel.categories.collectAsState()
     var showInputCategoryDialog by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope() // ✅ コルーチン用スコープ
+    val scope = rememberCoroutineScope()
 
     if (showInputCategoryDialog) {
         InputCategoryDialog(
             onConfirm = { newCategory ->
                 scope.launch {
                     val newId = categoryViewModel.addCategory(newCategory)
-                    selectedCategoryId = newId // ✅ 即選択
+                    selectedCategoryId = newId.toInt()
                     showInputCategoryDialog = false
                 }
             },
@@ -66,7 +68,9 @@ fun InputWordDialog(
             Text("用語を追加", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         },
         text = {
+            // 単語、ルビ、カテゴリの入力・選択肢
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                // 単語入力フィールド
                 OutlinedTextField(
                     value = inputWord,
                     onValueChange = { inputWord = it },
@@ -77,6 +81,7 @@ fun InputWordDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // ルビ入力フィールド
                 OutlinedTextField(
                     value = inputWordRuby,
                     onValueChange = { inputWordRuby = it },
@@ -87,6 +92,7 @@ fun InputWordDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // カテゴリ選択ドロップダウン
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }

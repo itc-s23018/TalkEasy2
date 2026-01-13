@@ -16,6 +16,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.rememberAsyncImagePainter
 
+// AIアシスト機能に関する設定ダイアログ
 @Composable
 fun AI_AssistDialog(
     userEmail: String?,
@@ -43,13 +44,13 @@ fun AI_AssistDialog(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // タイトル
                 Text("AIアシスト設定", style = MaterialTheme.typography.titleLarge)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // アカウント情報表示
+                // アカウント情報の表示エリア
                 if (isLoggedIn && userEmail != null) {
+                    // ログイン済みの場合、ユーザー情報を表示
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         if (userPhotoUrl != null) {
                             Image(
@@ -65,6 +66,7 @@ fun AI_AssistDialog(
                         Text(userEmail, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                     }
                 } else {
+                    // 未ログインの場合、連携を促すメッセージを表示
                     Text(
                         "Google アカウントとの連携が必要です",
                         color = Color.Red,
@@ -101,7 +103,6 @@ fun AI_AssistDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 閉じるボタン
                 TextButton(onClick = onDismiss) {
                     Text("閉じる")
                 }

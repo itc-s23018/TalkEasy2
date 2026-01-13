@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import kotlinx.coroutines.launch
 
+// 既存の単語を編集するためのダイアログ
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditWordDialog(
@@ -38,6 +39,7 @@ fun EditWordDialog(
     onConfirm: (String, String, Int) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 編集中の単語、ルビ、カテゴリIDを保持する状態変数
     var editWord by remember { mutableStateOf(initialWord) }
     var editRuby by remember { mutableStateOf(initialRuby) }
     var selectedCategoryId by remember { mutableStateOf(initialCategoryId) }
@@ -47,12 +49,13 @@ fun EditWordDialog(
     var showInputCategoryDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // 新規カテゴリ入力ダイアログの表示
     if (showInputCategoryDialog) {
         InputCategoryDialog(
             onConfirm = { newCategory ->
                 scope.launch {
                     val newId = categoryViewModel.addCategory(newCategory)
-                    selectedCategoryId = newId.toInt() // ✅ 即選択
+                    selectedCategoryId = newId.toInt() // 追加したカテゴリを即座に選択
                     showInputCategoryDialog = false
                 }
             },
@@ -66,6 +69,7 @@ fun EditWordDialog(
             Text("用語を編集", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         },
         text = {
+            // 単語、ルビ、カテゴリの入力・選択肢
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 OutlinedTextField(
                     value = editWord,
@@ -128,6 +132,7 @@ fun EditWordDialog(
                 onClick = {
                     val word = editWord.trim()
                     val ruby = editRuby.trim()
+                    // 単語とルビが空でなければ更新処理を実行
                     if (word.isNotEmpty() && ruby.isNotEmpty()) {
                         onConfirm(word, ruby, selectedCategoryId)
                     }

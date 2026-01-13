@@ -11,12 +11,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
+// 初回起動時にユーザー情報を入力するためのダイアログ
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputUserDialog(
     onConfirm: (String, String, String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 姓、名、フリガナの入力値を保持する状態変数
     var inputLastName by remember { mutableStateOf("") }
     var inputLastNameRudy by remember { mutableStateOf("") }
     var inputFirstName by remember { mutableStateOf("") }
@@ -42,6 +44,7 @@ fun InputUserDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // 姓・名の入力フィールド
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = inputLastName,
@@ -62,6 +65,7 @@ fun InputUserDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // フリガナ（セイ・メイ）の入力フィールド
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = inputLastNameRudy,

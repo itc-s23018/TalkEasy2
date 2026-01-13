@@ -16,11 +16,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
+// 新しいカテゴリを追加するためのダイアログ
 @Composable
 fun InputCategoryDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 入力された新しいカテゴリ名を保持する状態変数
     var inputNewCategory by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -62,7 +64,7 @@ fun InputCategoryDialog(
         dismissButton = {
             Button(
                 onClick = {
-                    inputNewCategory = "" // ✅ キャンセル時もクリア
+                    inputNewCategory = ""
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(

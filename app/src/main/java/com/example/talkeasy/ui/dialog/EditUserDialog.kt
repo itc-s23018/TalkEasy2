@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.ui.theme.TalkEasyTheme
 
+// ユーザー情報を編集するためのダイアログ
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditUserDialog(
@@ -21,6 +22,7 @@ fun EditUserDialog(
     onConfirm: (String, String, String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // 入力された姓、名、フリガナを保持する状態変数
     var inputLastName by rememberSaveable { mutableStateOf(initialLastName) }
     var inputFirstName by rememberSaveable { mutableStateOf(initialFirstName) }
     var inputLastNameRudy by rememberSaveable { mutableStateOf(initialLastNameRudy) }
@@ -32,6 +34,7 @@ fun EditUserDialog(
             Text("ユーザー編集", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         },
         text = {
+            // 姓、名、フリガナの入力フィールド
             Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(

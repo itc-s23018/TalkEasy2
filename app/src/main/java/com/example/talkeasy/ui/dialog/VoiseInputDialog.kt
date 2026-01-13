@@ -35,9 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.talkeasy.R
-import com.example.talkeasy.ui.theme.TalkEasyTheme
 import java.util.Locale
 
+// 音声入力を行うためのダイアログ
 @Composable
 fun VoiceInputDialog(
     onDismiss: () -> Unit,
@@ -50,7 +50,7 @@ fun VoiceInputDialog(
     DisposableEffect(Unit) {
         val listener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
-                isListening = true
+                isListening = true // 認識準備完了
             }
 
             override fun onBeginningOfSpeech() {}

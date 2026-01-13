@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.data.entity.Words
 
+// カテゴリを削除する前に確認するためのダイアログ
 @Composable
 fun DeleteCategoryDialog(
     categoryName: String,
@@ -28,6 +29,7 @@ fun DeleteCategoryDialog(
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // カテゴリに単語が含まれているかどうかに応じてメッセージを分岐
                 if (words.isEmpty()) {
                     Text("このカテゴリには用語が保存されていません。", color = Color.Gray)
                 } else {
@@ -36,10 +38,11 @@ fun DeleteCategoryDialog(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    // 含まれている単語のリストを表示
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 200.dp),
+                            .heightIn(max = 200.dp), // 高さに上限を設定
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         items(words) { word ->

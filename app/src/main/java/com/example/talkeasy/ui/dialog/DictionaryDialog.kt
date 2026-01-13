@@ -16,6 +16,7 @@ import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.data.viewmodel.WordsViewModel
 import kotlinx.coroutines.launch
 
+// 会話から抽出された専門用語を表示し、辞書登録を促すダイアログ
 @Composable
 fun DictionaryDialog(
     onDismiss: () -> Unit,
@@ -37,6 +38,7 @@ fun DictionaryDialog(
                 Text("取得された専門用語", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // ローディング状態、単語リストの有無に応じて表示を切り替え
                 when {
                     isLoading -> {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -58,10 +60,12 @@ fun DictionaryDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        // 単語とルビを表示
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(text = word.word, style = MaterialTheme.typography.bodyLarge)
                                             Text(text = word.wordRuby, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                                         }
+                                        // 「追加」ボタン
                                         Button(onClick = { selectedWord = word }) {
                                             Text("追加")
                                         }
@@ -80,6 +84,7 @@ fun DictionaryDialog(
         }
     }
 
+    // 「追加」ボタンが押されたら、単語入力ダイアログを表示
     if (selectedWord != null) {
         InputWordDialog(
             categoryViewModel = categoryViewModel,
@@ -106,7 +111,6 @@ fun DictionaryDialog(
                         history = messages,
                         allWords = allWords
                     )
-                    // ✅ 非同期処理が終わった後にローディングを消す
                     isLoading = false
                 }
             }

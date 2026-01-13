@@ -37,12 +37,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.talkeasy.R
 
+// 右からスライドインするドロワー
 @Composable
 fun RightDrawer(
     isOpen: Boolean,
     onClose: () -> Unit,
     content: @Composable () -> Unit,
-    onUserEdit: () -> Unit,   // ← @Composable を外す
+    onUserEdit: () -> Unit,
     onSetting: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -54,21 +55,22 @@ fun RightDrawer(
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f))
                     .pointerInput(Unit) {
-                        detectTapGestures { onClose() }
+                        detectTapGestures { onClose() } // 背景タップでドロワーを閉じる
                     }
             )
         }
 
         AnimatedVisibility(
             visible = isOpen,
-            enter = slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)),
-            exit = slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)),
+            enter = slideInHorizontally(initialOffsetX = { it }, animationSpec = tween(300)), // 右からスライドイン
+            exit = slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)), // 右へスライドアウト
             modifier = Modifier.align(Alignment.TopEnd)
         ) {
+            // ドロワーのコンテンツ
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(0.7f)        // 半分幅
+                    .fillMaxWidth(0.7f)
                     .background(Color.White)
             ) {
                 Column(
@@ -98,7 +100,7 @@ fun RightDrawer(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // 設定ボタン（テキストのみ）
+                    // AIアシストボタン
                     TextButton(onClick = onSetting) {
                         Icon(
                             painter = painterResource(id = R.drawable.star),
@@ -120,14 +122,11 @@ fun RightDrawer(
     }
 }
 
-
-
-
 @Preview(showBackground = true)
 @Composable
 fun RightDrawerPreview() {
     RightDrawer(
-        isOpen = true, // ← 固定値
+        isOpen = true,
         onClose = {},
         content = {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -138,4 +137,3 @@ fun RightDrawerPreview() {
         onSetting = {}
     )
 }
-

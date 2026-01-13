@@ -16,18 +16,19 @@ import com.example.talkeasy.data.viewmodel.CategoryViewModel
 fun CategorySelector(
     categoryViewModel: CategoryViewModel,
     onCategorySelected: (Int?) -> Unit,
-    onManageCategories: () -> Unit // ✅ 管理画面遷移用コールバックを追加
+    onManageCategories: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
 
     val categories by categoryViewModel.categories.collectAsState()
 
+    // UI要素を横に並べる
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp),
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.End, // 右端に配置
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -37,7 +38,9 @@ fun CategorySelector(
 
         Spacer(modifier = Modifier.width(12.dp))
 
+        // ドロップダウンメニューのコンテナ
         Box {
+            // 現在選択中のカテゴリ名とドロップダウンアイコンを表示するボタン
             TextButton(onClick = { expanded = true }) {
                 Text(
                     selectedCategoryId?.let { id ->
@@ -55,6 +58,7 @@ fun CategorySelector(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
+                // 「All」選択肢
                 DropdownMenuItem(
                     text = { Text("All") },
                     onClick = {
@@ -63,8 +67,9 @@ fun CategorySelector(
                         expanded = false
                     }
                 )
+                // カテゴリリストの選択肢
                 categories
-                    .filter { it.name != "All" }
+                    .filter { it.name != "All" } // "All"は除外
                     .forEach { category ->
                         DropdownMenuItem(
                             text = { Text(category.name) },
@@ -76,6 +81,7 @@ fun CategorySelector(
                         )
                     }
 
+                // 「カテゴリを管理」選択肢
                 DropdownMenuItem(
                     text = {
                         Text(
@@ -90,7 +96,7 @@ fun CategorySelector(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(MaterialTheme.colorScheme.primary) // 背景色をプライマリカラーに
                 )
             }
         }

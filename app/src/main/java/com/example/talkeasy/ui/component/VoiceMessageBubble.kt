@@ -19,19 +19,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// 音声入力メッセージを表示する吹き出しUI
 @Composable
 fun VoiceMessageBubble(text: String, isCorrecting: Boolean = false) {
-    // 補正中ならグラデーションアニメーション
+    // isCorrectingがtrueの場合、テキストにグラデーションアニメーションを適用
     val styledText = if (isCorrecting) {
-        val transition = rememberInfiniteTransition(label = "")
+        val transition = rememberInfiniteTransition(label = "correcting_animation")
         val offsetX by transition.animateFloat(
-            initialValue = -300f,
-            targetValue = 300f,
+            initialValue = -300f, // 開始位置
+            targetValue = 300f, // 終了位置
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 3000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
+                animation = tween(durationMillis = 3000, easing = LinearEasing), // 3秒かけて線形に変化
+                repeatMode = RepeatMode.Restart // 繰り返す
             ),
-            label = ""
+            label = "offset_x_animation"
         )
 
         val animatedBrush = Brush.linearGradient(
@@ -50,9 +51,11 @@ fun VoiceMessageBubble(text: String, isCorrecting: Boolean = false) {
             }
         }
     } else {
+        // isCorrectingがfalseの場合は、通常のテキスト
         buildAnnotatedString { append(text) }
     }
 
+    // 吹き出しを左寄せで配置
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,14 +64,15 @@ fun VoiceMessageBubble(text: String, isCorrecting: Boolean = false) {
     ) {
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.5.dp, Color.Gray),
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.widthIn(max = 300.dp)
+            border = BorderStroke(1.5.dp, Color.Gray), // グレーの枠線
+            shape = RoundedCornerShape(20.dp), // 角を丸める
+            modifier = Modifier.widthIn(max = 300.dp) // 最大幅を指定
         ) {
             Text(
-                text = styledText,
+                text = styledText, // アニメーション付きまたは通常のテキスト
                 fontSize = 20.sp,
                 modifier = Modifier.padding(16.dp),
+                // 補正中はスタイルに任せ、そうでなければ黒色
                 color = if (isCorrecting) Color.Unspecified else Color.Black
             )
         }

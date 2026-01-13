@@ -19,28 +19,30 @@ import com.example.talkeasy.ui.theme.TalkEasyTheme
 
 @Composable
 fun MessagesButton(
-    onVoiceInputClick: () -> Unit,
-    onKeyboardInputClick: () -> Unit,
+    onVoiceInputClick: () -> Unit, // 音声入力ボタンクリック時の処理
+    onKeyboardInputClick: () -> Unit, // キーボード入力ボタンクリック時の処理
     modifier: Modifier = Modifier
 ) {
+    // ボタン全体を囲むボックス
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .border(2.dp, Color.Black, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp)) // 角を丸める
+            .border(2.dp, Color.Black, RoundedCornerShape(16.dp)) // 黒い枠線
             .background(Color.White)
             .padding(vertical = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly // ボタンを均等に配置
         ) {
+            // 音声入力ボタン
             Button(
                 onClick = onVoiceInputClick,
                 modifier = Modifier.size(100.dp),
-                shape = CircleShape,
+                shape = CircleShape, // 円形
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
                 Icon(
@@ -58,10 +60,11 @@ fun MessagesButton(
                     .background(Color.Black)
             )
 
+            // キーボード入力ボタン
             Button(
                 onClick = onKeyboardInputClick,
                 modifier = Modifier.size(100.dp),
-                shape = CircleShape,
+                shape = CircleShape, // 円形
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
                 Icon(

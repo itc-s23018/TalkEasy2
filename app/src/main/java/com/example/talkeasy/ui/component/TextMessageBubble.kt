@@ -14,10 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.talkeasy.R
 
+// テキストメッセージを表示する吹き出しUI
 @Composable
 fun TextMessageBubble(
     text: String,
-    onSpeak: (String) -> Unit = {}
+    onSpeak: (String) -> Unit = {} // 読み上げボタンクリック時の処理
 ) {
     Row(
         modifier = Modifier
@@ -25,12 +26,14 @@ fun TextMessageBubble(
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.End
     ) {
+        // 吹き出し本体
         Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF98FB98)), // きみどり背景
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.widthIn(max = 300.dp),
-            border = BorderStroke(2.dp, Color.Black)
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF98FB98)), // 背景色を黄緑に
+            shape = RoundedCornerShape(20.dp), // 角を丸める
+            modifier = Modifier.widthIn(max = 300.dp), // 最大幅を指定
+            border = BorderStroke(2.dp, Color.Black) // 黒い枠線
         ) {
+            // テキストと読み上げボタンを横に並べる
             Row(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -39,7 +42,7 @@ fun TextMessageBubble(
                     text = text,
                     fontSize = 20.sp,
                     color = Color.Black,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f) // 横幅の余白を埋める
                 )
                 IconButton(onClick = { onSpeak(text) }) {
                     Icon(
@@ -53,10 +56,6 @@ fun TextMessageBubble(
         }
     }
 }
-
-
-
-
 
 @Preview(showBackground = true)
 @Composable

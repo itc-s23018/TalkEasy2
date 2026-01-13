@@ -17,14 +17,15 @@ import androidx.navigation.NavController
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
+import com.example.talkeasy.data.viewmodel.WordsViewModel
 import com.example.talkeasy.ui.component.CategorySelector
 import com.example.talkeasy.ui.component.WordCard
 import com.example.talkeasy.ui.dialog.EditWordDialog
 import com.example.talkeasy.ui.dialog.InputWordDialog
 import com.example.talkeasy.ui.dialog.DeleteWordDialog
-import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import kotlinx.coroutines.launch
 
+// 「マイ辞書」画面。登録した単語の一覧表示、追加、編集、削除を行う
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordsScreen(
@@ -33,12 +34,12 @@ fun WordsScreen(
     navController: NavController,
     onBackClick: () -> Unit
 ) {
+    // ダイアログ表示状態、編集/削除対象、選択カテゴリを管理
     var showInputDialog by remember { mutableStateOf(false) }
     var editingWord by remember { mutableStateOf<Words?>(null) }
     var wordToDelete by remember { mutableStateOf<Words?>(null) }
     var selectedCategoryId by remember { mutableStateOf<Int?>(null) }
 
-    // ✅ Snackbar の状態を保持
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -57,6 +58,7 @@ fun WordsScreen(
                 }
             )
         },
+        // 新規追加ボタン
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showInputDialog = true },
@@ -70,14 +72,14 @@ fun WordsScreen(
                 )
             }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 前面に表示
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // ✅ カテゴリ選択
+            // カテゴリ絞り込みセレクター
             CategorySelector(
                 categoryViewModel = categoryViewModel,
                 onCategorySelected = { categoryId ->
@@ -88,14 +90,12 @@ fun WordsScreen(
                 }
             )
 
-            // ✅ 選択カテゴリに応じた用語一覧
+            // 選択されたカテゴリに基づいて単語リストを取得
             val words by viewModel.getWords(selectedCategoryId).collectAsState(initial = emptyList())
 
             if (words.isEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 64.dp),
+                    modifier = Modifier.fillMaxSize().padding(bottom = 64.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -115,13 +115,12 @@ fun WordsScreen(
                     }
                 }
             } else {
+                // 単語リストの表示
                 LazyColumn {
                     items(words, key = { it.id }) { word ->
                         val dismissState = rememberSwipeToDismissBoxState(
-                            confirmValueChange = { value ->
-                                if (value == SwipeToDismissBoxValue.EndToStart) {
-                                    wordToDelete = word
-                                }
+                            confirmValueChange = {
+                                if (it == SwipeToDismissBoxValue.EndToStart) wordToDelete = word
                                 false
                             }
                         )
@@ -131,16 +130,9 @@ fun WordsScreen(
                             modifier = Modifier.height(IntrinsicSize.Min),
                             enableDismissFromStartToEnd = false,
                             backgroundContent = {
-                                val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                                    Color.Red.copy(alpha = 0.8f)
-                                } else {
-                                    Color.Transparent
-                                }
+                                val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) Color.Red.copy(alpha = 0.8f) else Color.Transparent
                                 Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(color)
-                                        .padding(end = 16.dp),
+                                    Modifier.fillMaxSize().background(color).padding(end = 16.dp),
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
                                     Icon(
@@ -151,34 +143,27 @@ fun WordsScreen(
                                     )
                                 }
                             },
-                            content = {
-                                WordCard(
-                                    word = word,
-                                    onClick = { editingWord = word }
-                                )
-                            }
+                            content = { WordCard(word = word, onClick = { editingWord = word }) }
                         )
                     }
                 }
             }
         }
 
-        // ✅ 新規追加ダイアログ
+        // 新規追加ダイアログ
         if (showInputDialog) {
             InputWordDialog(
                 categoryViewModel = categoryViewModel,
                 onConfirm = { word, ruby, categoryId ->
                     viewModel.addWord(word.trim(), ruby.trim(), categoryId)
                     showInputDialog = false
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("「${word}」が追加されました")
-                    }
+                    coroutineScope.launch { snackbarHostState.showSnackbar("「${word}」が追加されました") }
                 },
                 onDismiss = { showInputDialog = false }
             )
         }
 
-        // ✅ 編集ダイアログ
+        // 編集ダイアログ
         editingWord?.let { word ->
             EditWordDialog(
                 categoryViewModel = categoryViewModel,
@@ -188,24 +173,20 @@ fun WordsScreen(
                 onConfirm = { newWord, newRuby, newCategoryId ->
                     viewModel.updateWord(word.id, newWord.trim(), newRuby.trim(), newCategoryId)
                     editingWord = null
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("「${newWord}」が更新されました")
-                    }
+                    coroutineScope.launch { snackbarHostState.showSnackbar("「${newWord}」が更新されました") }
                 },
                 onDismiss = { editingWord = null }
             )
         }
 
-        // ✅ 削除確認ダイアログ
+        // 削除確認ダイアログ
         wordToDelete?.let { word ->
             DeleteWordDialog(
                 word = word,
                 onConfirm = {
                     viewModel.deleteWord(word)
                     wordToDelete = null
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("「${word.word}」が削除されました")
-                    }
+                    coroutineScope.launch { snackbarHostState.showSnackbar("「${word.word}」が削除されました") }
                 },
                 onDismiss = { wordToDelete = null }
             )

@@ -24,30 +24,32 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.Duration
 
+// 過去のトーク一覧を表示する画面
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalksScreen(
     viewModel: TalksViewModel = hiltViewModel(),
-    onTalkClick: (Talks) -> Unit = {}
+    onTalkClick: (Talks) -> Unit = {} // トークがクリックされたときの処理
 ) {
     val talks by viewModel.talks.collectAsState()
+    // 削除対象のトークを保持する状態変数
     var talkToDelete by remember { mutableStateOf<Talks?>(null) }
 
-    // Snackbar の状態を保持
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    // 削除確認ダイアログ
     if (talkToDelete != null) {
         AlertDialog(
             onDismissRequest = { talkToDelete = null },
             title = { Text("トークの削除", color = Color.Black) },
             text = { Text("'${talkToDelete?.title}'を本当に削除しますか？", color = Color.Black) },
+            // 削除ボタン
             confirmButton = {
                 Button(
                     onClick = {
                         talkToDelete?.let {
                             viewModel.deleteTalk(it)
-                            // Snackbar 表示
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar("「${it.title}」が消されました")
                             }
@@ -84,7 +86,7 @@ fun TalksScreen(
                 title = { Text("トーク一覧画面") }
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 ここで前面に表示
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // Snackbarのホスト
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -98,7 +100,7 @@ fun TalksScreen(
                         if (value == SwipeToDismissBoxValue.EndToStart) {
                             talkToDelete = talk
                         }
-                        false
+                        false // スワイプで要素が自動的に消えないようにする
                     }
                 )
 
@@ -125,6 +127,7 @@ fun TalksScreen(
                             )
                         }
                     },
+                    // 通常表示されるコンテンツ（トークカード）
                     content = {
                         Card(
                             modifier = Modifier
@@ -134,8 +137,10 @@ fun TalksScreen(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(talk.title, style = MaterialTheme.typography.titleMedium)
                                 val formatter = DateTimeFormatter.ofPattern("yy/MM/dd")
+                                // 保存期間は1週間
                                 val expiryDate = talk.createdAt.plusWeeks(1)
                                 val daysLeft = Duration.between(LocalDateTime.now(), expiryDate).toDays()
+                                // 残り3日以下で日付の色を赤に
                                 val dateColor = if (daysLeft <= 3) Color.Red else Color.Black
 
                                 Text(

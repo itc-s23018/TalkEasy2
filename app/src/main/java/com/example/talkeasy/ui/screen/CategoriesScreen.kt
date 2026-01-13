@@ -17,13 +17,16 @@ import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.CategoryWithCount
 import kotlinx.coroutines.launch
 
+// カテゴリの一覧を表示・管理する画面
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoriesScreen(
     categoryViewModel: CategoryViewModel,
     onBackClick: () -> Unit
 ) {
+    // ViewModelから単語数を含むカテゴリリストを取得
     val categoriesWithCount by categoryViewModel.categoriesWithCount.collectAsState()
+    // 削除対象のカテゴリを保持する状態変数
     var categoryToDelete by remember { mutableStateOf<CategoryWithCount?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -44,7 +47,7 @@ fun CategoriesScreen(
                 }
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // 👈 Snackbar を前面に表示
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // Snackbarのホスト
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -63,11 +66,13 @@ fun CategoriesScreen(
                     )
                 }
             } else {
+                // カテゴリリストの表示
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(4.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    // "All"カテゴリを除外して表示
                     items(categoriesWithCount.filter { it.category.name != "All" }, key = { it.category.id }) { item ->
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { value ->
@@ -81,18 +86,11 @@ fun CategoriesScreen(
                         SwipeToDismissBox(
                             state = dismissState,
                             modifier = Modifier.height(IntrinsicSize.Min),
-                            enableDismissFromStartToEnd = false,
+                            enableDismissFromStartToEnd = false, // 右方向のスワイプは無効
                             backgroundContent = {
-                                val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) {
-                                    Color.Red.copy(alpha = 0.8f)
-                                } else {
-                                    Color.Transparent
-                                }
+                                val color = if (dismissState.dismissDirection == SwipeToDismissBoxValue.EndToStart) Color.Red.copy(alpha = 0.8f) else Color.Transparent
                                 Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(color)
-                                        .padding(end = 16.dp),
+                                    Modifier.fillMaxSize().background(color).padding(end = 16.dp),
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
                                     Icon(
@@ -103,26 +101,25 @@ fun CategoriesScreen(
                                     )
                                 }
                             },
+                            // カテゴリカード本体
                             content = {
                                 Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                                     shape = MaterialTheme.shapes.medium
                                 ) {
                                     Row(
-                                        modifier = Modifier
-                                            .padding(16.dp)
-                                            .fillMaxWidth(),
+                                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        // カテゴリ名
                                         Text(
                                             text = item.category.name,
                                             style = MaterialTheme.typography.headlineMedium,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
+                                        // 登録単語数
                                         Text(
                                             text = "${item.wordCount} 件",
                                             style = MaterialTheme.typography.titleMedium,
@@ -137,16 +134,18 @@ fun CategoriesScreen(
             }
         }
 
+        // 削除確認ダイアログの表示
         categoryToDelete?.let { item ->
+            // 削除対象カテゴリに属する単語リストを取得
             val words by categoryViewModel.getWordsByCategory(item.category.id).collectAsState(initial = emptyList())
 
             DeleteCategoryDialog(
                 categoryName = item.category.name,
                 words = words,
                 onConfirm = {
+                    // カテゴリを削除
                     categoryViewModel.deleteCategory(item.category)
                     categoryToDelete = null
-                    // 👇 Snackbar 表示
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar("「${item.category.name}」カテゴリが削除されました")
                     }

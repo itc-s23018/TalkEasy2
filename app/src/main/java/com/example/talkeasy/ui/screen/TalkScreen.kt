@@ -1,7 +1,6 @@
 package com.example.talkeasy.ui.screen
 
 import android.speech.tts.TextToSpeech
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -10,8 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,7 +23,7 @@ import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.data.viewmodel.TopViewModel
-import com.example.talkeasy.ui.viewmodel.WordsViewModel
+import com.example.talkeasy.data.viewmodel.WordsViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessageBubble
 import com.example.talkeasy.ui.component.MessagesButton
@@ -41,26 +38,26 @@ import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+// 個別のトーク（会話）画面
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun TalkScreen(
-    talkId: Int,
+    talkId: Int, // 表示するトークのID
     talksViewModel: TalksViewModel = hiltViewModel(),
     wordsViewModel: WordsViewModel = hiltViewModel(),
     categoryViewModel: CategoryViewModel = hiltViewModel(),
     topViewModel: TopViewModel = hiltViewModel()
 ) {
     val navController = LocalNavController.current
+    // ViewModelから状態を監視
     val talkTitle by talksViewModel.talkTitle.collectAsState(initial = "新しいトーク")
     val messages by talksViewModel.messages.collectAsState()
     val tempMessage by talksViewModel.tempMessage.collectAsState()
     val aiSuggestions by talksViewModel.aiSuggestions.collectAsState()
     val isGeneratingSuggestions by talksViewModel.isGeneratingSuggestions.collectAsState()
-
     val allWords by wordsViewModel.allWords.collectAsState()
     val extractedWordsMap by wordsViewModel.extractedWordsMap.collectAsState()
     val currentExtractedWords = extractedWordsMap[talkId] ?: emptyList()
-
     val user = topViewModel.user
 
     var showEditDialog by remember { mutableStateOf(false) }
@@ -71,6 +68,7 @@ fun TalkScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    // マイク権限の状態を確認・要求
     val micPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
     LaunchedEffect(Unit) {
         if (!micPermissionState.status.isGranted) {
@@ -78,9 +76,9 @@ fun TalkScreen(
         }
     }
 
+    // TextToSpeechの初期化
     val context = LocalContext.current
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
-
     DisposableEffect(Unit) {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -93,15 +91,15 @@ fun TalkScreen(
         }
     }
 
+    // talkIdが変更されたらトーク情報を読み込む
     LaunchedEffect(talkId) {
         talksViewModel.loadTalk(talkId)
         talksViewModel.loadMessages(talkId)
     }
 
-    // メッセージリストのスクロール状態を管理
+    // メッセージリストのスクロール状態を管理し、新しいメッセージで自動スクロール
     val scrollState = rememberScrollState()
     LaunchedEffect(messages.size) {
-        // messages の数が変わるたびに（新しいメッセージが追加されるたびに）一番下までスクロール
         scrollState.animateScrollTo(scrollState.maxValue)
     }
 
@@ -114,7 +112,6 @@ fun TalkScreen(
                 .padding(paddingValues)
                 .padding(top = 16.dp, start = 12.dp, end = 12.dp)
         ) {
-            // ヘッダー
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,52 +122,29 @@ fun TalkScreen(
             ) {
                 IconButton(
                     onClick = { navController.navigate("tabs/1") },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterStart)
+                    modifier = Modifier.align(Alignment.CenterStart).size(48.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.back),
-                        contentDescription = "Talk",
-                        modifier = Modifier.size(40.dp),
-                        tint = Color.Black
-                    )
+                    Icon(painter = painterResource(id = R.drawable.back), contentDescription = "Back", modifier = Modifier.size(40.dp), tint = Color.Black)
                 }
 
+
                 Row(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 56.dp),
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 56.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = talkTitle, fontSize = 20.sp)
-                    IconButton(
-                        onClick = { showEditDialog = true },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.edit),
-                            contentDescription = "Edit",
-                            modifier = Modifier.size(35.dp),
-                            tint = Color.Black
-                        )
+                    IconButton(onClick = { showEditDialog = true }, modifier = Modifier.size(48.dp)) {
+                        Icon(painter = painterResource(id = R.drawable.edit), contentDescription = "Edit", modifier = Modifier.size(35.dp), tint = Color.Black)
                     }
                 }
 
-                // 👇 ログイン済みなら AI アシストボタンを表示
                 if (topViewModel.isLoggedIn) {
                     IconButton(
                         onClick = {
-                            wordsViewModel.extractWordsFromServer(
-                                talkId = talkId,
-                                history = messages.map { it.text },
-                                allWords = allWords
-                            )
+                            wordsViewModel.extractWordsFromServer(talkId = talkId, history = messages.map { it.text }, allWords = allWords)
                             showDictionaryDialog = true
                         },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .align(Alignment.CenterEnd)
+                        modifier = Modifier.align(Alignment.CenterEnd).size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.spellcheck),
@@ -188,33 +162,22 @@ fun TalkScreen(
                     onConfirm = {
                         talksViewModel.updateTalkTitle(talkId, it)
                         showEditDialog = false
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("「${it}」が更新されました")
-                        }
+                        coroutineScope.launch { snackbarHostState.showSnackbar("「${it}」が更新されました") }
                     },
                     onDismiss = { showEditDialog = false }
                 )
             }
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .verticalScroll(scrollState) // rememberScrollState() を scrollState に変更
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 8.dp).verticalScroll(scrollState)
             ) {
                 messages.forEach { message ->
-                    MessageBubble(
-                        text = message.text,
-                        inputType = message.inputType,
-                        onSpeak = { tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null) }
-                    )
+                    MessageBubble(text = message.text, inputType = message.inputType, onSpeak = { tts?.speak(it, TextToSpeech.QUEUE_FLUSH, null, null) })
                 }
-                tempMessage?.let {
-                    VoiceMessageBubble(text = it.text, isCorrecting = true)
-                }
+                tempMessage?.let { VoiceMessageBubble(text = it.text, isCorrecting = true) }
             }
 
+            // 専門用語抽出ダイアログ
             if (showDictionaryDialog) {
                 DictionaryDialog(
                     onDismiss = { showDictionaryDialog = false },
@@ -231,36 +194,23 @@ fun TalkScreen(
                 )
             }
 
+            // 入力ボタン（音声/テキスト）
             MessagesButton(
                 onVoiceInputClick = { showVoiceInputDialog = true },
                 onKeyboardInputClick = {
-                    // ✅ 返答提案をサーバー経由で呼び出す
-                    talksViewModel.generateReplySuggestions(
-                        allWords = allWords,
-                        categories = categoryViewModel.categories.value
-                    )
+                    talksViewModel.generateReplySuggestions(allWords = allWords, categories = categoryViewModel.categories.value)
                     showTextInputDialog = true
                 },
             )
 
+            // 音声入力ダイアログ
             if (showVoiceInputDialog) {
                 VoiceInputDialog(
                     onDismiss = { showVoiceInputDialog = false },
                     onResult = { rawText ->
                         if (topViewModel.isLoggedIn) {
-                            // ✅ 音声補正をサーバー経由で呼び出す
-                            talksViewModel.correctWithFullHistory(
-                                talkId = talkId,
-                                rawText = rawText,
-                                dbWords = allWords,
-                                user = user
-                            )
-                            // ✅ 用語抽出も呼び出す
-                            wordsViewModel.extractWordsFromServer(
-                                talkId = talkId,
-                                history = messages.map { it.text } + rawText,
-                                allWords = allWords
-                            )
+                            talksViewModel.correctWithFullHistory(talkId = talkId, rawText = rawText, dbWords = allWords, user = user)
+                            wordsViewModel.extractWordsFromServer(talkId = talkId, history = messages.map { it.text } + rawText, allWords = allWords)
                         } else {
                             talksViewModel.sendMessage(talkId, rawText, InputType.VOICE)
                         }
@@ -269,6 +219,7 @@ fun TalkScreen(
                 )
             }
 
+            // テキスト入力ダイアログ
             if (showTextInputDialog) {
                 TextInputDialog(
                     onDismissRequest = { showTextInputDialog = false },
@@ -276,14 +227,8 @@ fun TalkScreen(
                         talksViewModel.sendMessage(talkId, inputText, InputType.TEXT)
                         tts?.speak(inputText, TextToSpeech.QUEUE_FLUSH, null, null)
                         showTextInputDialog = false
-
                         if (topViewModel.isLoggedIn) {
-                            // ✅ 用語抽出も呼び出す
-                            wordsViewModel.extractWordsFromServer(
-                                talkId = talkId,
-                                history = messages.map { it.text } + inputText,
-                                allWords = allWords
-                            )
+                            wordsViewModel.extractWordsFromServer(talkId = talkId, history = messages.map { it.text } + inputText, allWords = allWords)
                         }
                     },
                     suggestions = if (topViewModel.isLoggedIn) aiSuggestions else emptyList(),

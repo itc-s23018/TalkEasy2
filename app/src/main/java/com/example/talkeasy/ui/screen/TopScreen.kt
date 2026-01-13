@@ -12,36 +12,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.talkeasy.R
 import com.example.talkeasy.data.entity.User
 import com.example.talkeasy.data.viewmodel.TopViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.dialog.EditUserDialog
 import com.example.talkeasy.ui.dialog.InputUserDialog
-import com.example.talkeasy.ui.dialog.AI_AssistDialog
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+// アプリのトップ画面（ホーム画面）
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopScreen(
-    viewModel: TopViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    viewModel: TopViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
     onOpenDrawer: () -> Unit,
-    auth: FirebaseAuth,                // 👈 追加: FirebaseAuthを渡す
-    onLoginClick: () -> Unit           // 👈 追加: MainActivityから渡す
+    auth: FirebaseAuth,
+    onLoginClick: () -> Unit
 ) {
     val navController = LocalNavController.current
     val user = viewModel.user
     val showDialog = viewModel.showUserInputDialog
     val showEditDialog = viewModel.showUserEditDialog
-    val showAiAssistDialog = viewModel.showAiAssistDialog
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold { paddingValues ->
+        Scaffold {
+            paddingValues ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -66,9 +67,7 @@ fun TopScreen(
                     // トーク開始ボタン
                     Button(
                         onClick = {
-                            val talkId = UUID.randomUUID().toString()
-                            val title = "新しいトーク $talkId"
-                            viewModel.createNewTalk(title) { createdId ->
+                            viewModel.createNewTalk("新しいトーク") { createdId ->
                                 navController.navigate("talk/$createdId")
                             }
                         },
@@ -152,7 +151,7 @@ fun TopScreen(
         }
     }
 
-    // ユーザー登録ダイアログ
+    // ユーザー登録ダイアログ（初回起動時など）
     if (showDialog) {
         InputUserDialog(
             onConfirm = { lastName, firstName, lastNameRuby, firstNameRuby ->

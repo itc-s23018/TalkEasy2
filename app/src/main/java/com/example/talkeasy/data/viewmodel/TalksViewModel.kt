@@ -30,36 +30,46 @@ import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
+// HiltによるViewModel注入のためのアノテーション
 @HiltViewModel
+// TalksViewModel: トークとメッセージの管理、およびGemini APIとの連携を行う
 class TalksViewModel @Inject constructor(
-    private val repository: TalksRepository,
-    private val geminiApi: GeminiApiService,
-    @ApplicationContext private val context: Context
+    private val repository: TalksRepository, // TalksRepositoryのインスタンス
+    private val geminiApi: GeminiApiService, // GeminiApiServiceのインスタンス
+    @ApplicationContext private val context: Context // アプリケーションコンテキスト
 ) : ViewModel() {
 
+    // 現在のトークのタイトルを保持するStateFlow
     private val _talkTitle = MutableStateFlow("新しいトーク")
     val talkTitle: StateFlow<String> = _talkTitle
 
+    // すべてのトークのリストを保持するStateFlow
     private val _talks = MutableStateFlow<List<Talks>>(emptyList())
     val talks: StateFlow<List<Talks>> = _talks
 
+    // 現在のトークのメッセージリストを保持するStateFlow
     private val _messages = MutableStateFlow<List<Messages>>(emptyList())
     val messages: StateFlow<List<Messages>> = _messages
 
+    // AIによる修正中の一次的なメッセージを保持するStateFlow
     private val _tempMessage = MutableStateFlow<Messages?>(null)
     val tempMessage: StateFlow<Messages?> = _tempMessage
 
+    // AIによる返信提案のリストを保持するStateFlow
     private val _aiSuggestions = MutableStateFlow<List<String>>(emptyList())
     val aiSuggestions: StateFlow<List<String>> = _aiSuggestions
 
+    // 返信提案を生成中かどうかを示すStateFlow
     private val _isGeneratingSuggestions = MutableStateFlow(false)
     val isGeneratingSuggestions: StateFlow<Boolean> = _isGeneratingSuggestions
 
+    // 初期化時に古いトークをクリーンアップし、すべてのトークをロードする
     init {
         cleanUpOldTalks()
         loadAllTalks()
     }
 
+    // 指定されたIDのトークをロードし、タイトルを更新する
     fun loadTalk(talkId: Int) {
         viewModelScope.launch {
             val talk = repository.getTalk(talkId)
@@ -67,14 +77,16 @@ class TalksViewModel @Inject constructor(
         }
     }
 
+    // トークのタイトルを更新する
     fun updateTalkTitle(talkId: Int, newTitle: String) {
         viewModelScope.launch {
             repository.updateTalkTitle(talkId, newTitle)
             _talkTitle.value = newTitle
-            loadAllTalks()
+            loadAllTalks() // タイトル更新後、全トークリストを再読み込み
         }
     }
 
+    // 新しいトークを作成し、7日後に自動削除するWorkerをスケジュールする
     fun createNewTalk(onCreated: (Int) -> Unit) {
         viewModelScope.launch {
             val newId = repository.createTalk()
@@ -90,6 +102,7 @@ class TalksViewModel @Inject constructor(
         }
     }
 
+    // トークを削除する
     fun deleteTalk(talk: Talks) {
         viewModelScope.launch {
             repository.deleteTalk(talk)
@@ -97,24 +110,28 @@ class TalksViewModel @Inject constructor(
         }
     }
 
+    // 1週間以上前の古いトークを削除する
     fun cleanUpOldTalks() {
         viewModelScope.launch {
             repository.deleteTalksOlderThanAWeek()
         }
     }
 
+    // すべてのトークをロードする
     fun loadAllTalks() {
         viewModelScope.launch {
             _talks.value = repository.getAllTalks()
         }
     }
 
+    // 指定されたトークIDのメッセージをロードする
     fun loadMessages(talkId: Int) {
         viewModelScope.launch {
             _messages.value = repository.getMessagesForTalk(talkId)
         }
     }
 
+    // メッセージを送信（DBに保存し、UIを更新）する
     fun sendMessage(talkId: Int, text: String, inputType: InputType) {
         viewModelScope.launch {
             val message = Messages(
@@ -142,6 +159,7 @@ class TalksViewModel @Inject constructor(
         user: User?
     ) {
         viewModelScope.launch {
+            // 補正中のテキストを一時的に表示
             val temp = Messages(
                 talkId = talkId,
                 text = rawText,
@@ -152,6 +170,7 @@ class TalksViewModel @Inject constructor(
 
             val historyTexts = _messages.value.map { it.text }
             val idToken = getIdToken() ?: run {
+                // IDトークンが取得できない場合は、補正せずにそのままメッセージを送信
                 sendMessage(talkId, rawText, InputType.VOICE)
                 _tempMessage.value = null
                 return@launch
@@ -173,9 +192,9 @@ class TalksViewModel @Inject constructor(
                 sendMessage(talkId, correctedText, InputType.VOICE)
             } catch (e: Exception) {
                 Log.e("TalksViewModel", "GeminiVoice Error: ${e.message}", e)
-                sendMessage(talkId, rawText, InputType.VOICE)
+                sendMessage(talkId, rawText, InputType.VOICE) // エラー時も元のテキストを送信
             } finally {
-                _tempMessage.value = null
+                _tempMessage.value = null // 一時メッセージをクリア
             }
         }
     }
@@ -196,7 +215,7 @@ class TalksViewModel @Inject constructor(
 
             val request = GeminiRequest(
                 idToken = idToken,
-                prompt = "",
+                prompt = "", // 返信提案なのでプロンプトは空
                 mode = "text",
                 history = historyTexts,
                 dbWords = allWords

@@ -1,4 +1,4 @@
-package com.example.talkeasy.ui.viewmodel
+package com.example.talkeasy.data.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -16,22 +16,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 
+// HiltによるViewModel注入のためのアノテーション
 @HiltViewModel
+// WordsViewModel: 単語の管理、およびGemini APIとの連携による単語抽出を行う
 class WordsViewModel @Inject constructor(
-    private val dao: WordsDao,
-    private val geminiApi: GeminiApiService   // ✅ Retrofit経由でGemini呼び出し
+    private val dao: WordsDao, // WordsDaoのインスタンス
+    private val geminiApi: GeminiApiService   // GeminiApiServiceのインスタンス (Retrofit経由)
 ) : ViewModel() {
 
-    /** 全ての単語を監視 */
+    /** データベース内の全ての単語を監視するStateFlow */
     val allWords: StateFlow<List<Words>> =
         dao.getAllWords()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    /** トークごとの抽出候補を保持 */
+    /** トークごとに抽出された単語候補を保持するマップ (Key: talkId, Value: List<Words>) */
     private val _extractedWordsMap = MutableStateFlow<Map<Int, List<Words>>>(emptyMap())
     val extractedWordsMap: StateFlow<Map<Int, List<Words>>> = _extractedWordsMap.asStateFlow()
 
-    /** 単語をDBに追加 */
+    /** 単語をデータベースに追加する */
     fun addWord(word: String, ruby: String, categoryId: Int) {
         viewModelScope.launch {
             dao.insertWord(
@@ -45,14 +47,16 @@ class WordsViewModel @Inject constructor(
         }
     }
 
-    /** 抽出候補を追加 (未分類 categoryId = -1) */
+    /** 抽出された単語候補を追加する (未分類カテゴリID: -1) */
     fun addExtractedWords(talkId: Int, newWords: List<Words>, allWords: List<Words>) {
         val current = _extractedWordsMap.value[talkId]?.toMutableList() ?: mutableListOf()
 
         newWords.forEach { newWord ->
+            // 候補リストにすでにあるか、DBにすでに登録されているかを確認
             val alreadyInList = current.any { it.word == newWord.word }
             val alreadyInDb = allWords.any { it.word == newWord.word }
 
+            // どちらにも存在しない場合のみ追加
             if (!alreadyInList && !alreadyInDb) {
                 current.add(newWord.copy(categoryId = -1))
             }
@@ -63,7 +67,7 @@ class WordsViewModel @Inject constructor(
         }
     }
 
-    /** 抽出候補を削除 */
+    /** 抽出候補から単語を削除する */
     fun removeExtractedWord(talkId: Int, word: Words) {
         val current = _extractedWordsMap.value[talkId]?.toMutableList() ?: mutableListOf()
         current.remove(word)
@@ -72,7 +76,7 @@ class WordsViewModel @Inject constructor(
         }
     }
 
-    /** カテゴリ別に単語を取得 */
+    /** カテゴリ別に単語を取得する (categoryIdがnullの場合は全ての単語を取得) */
     fun getWords(categoryId: Int?): Flow<List<Words>> {
         return if (categoryId == null) {
             dao.getAllWords()
@@ -81,7 +85,7 @@ class WordsViewModel @Inject constructor(
         }
     }
 
-    /** 単語を更新 */
+    /** 単語を更新する */
     fun updateWord(id: Int, newWord: String, newRuby: String, newCategoryId: Int) {
         viewModelScope.launch {
             val updated = Words(
@@ -95,14 +99,14 @@ class WordsViewModel @Inject constructor(
         }
     }
 
-    /** 単語を削除 */
+    /** 単語を削除する */
     fun deleteWord(word: Words) {
         viewModelScope.launch {
             dao.deleteWord(word)
         }
     }
 
-    /** ✅ サーバー経由で用語抽出 */
+    /** ✅ サーバー経由で会話履歴から用語を抽出する */
     fun extractWordsFromServer(talkId: Int, history: List<String>, allWords: List<Words>) {
         viewModelScope.launch {
             val idToken = getIdToken() ?: return@launch
@@ -116,6 +120,7 @@ class WordsViewModel @Inject constructor(
                 val response: GeminiResponse = geminiApi.extractWords(request)
                 Log.d("WordsViewModel", "GeminiWord Response: $response")
                 val newWords = response.extractWords()
+                // 抽出した単語を候補として追加
                 addExtractedWords(talkId, newWords, allWords)
             } catch (e: Exception) {
                 Log.e("WordsViewModel", "GeminiWord Error: ${e.message}", e)

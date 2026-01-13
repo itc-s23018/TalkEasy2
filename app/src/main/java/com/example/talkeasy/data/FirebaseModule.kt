@@ -8,9 +8,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(SingletonComponent::class) // アプリケーション全体で単一のインスタンスを提供
 object FirebaseModule {
-
     @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth {

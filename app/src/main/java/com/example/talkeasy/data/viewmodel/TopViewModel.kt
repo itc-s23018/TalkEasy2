@@ -25,36 +25,38 @@ class TopViewModel @Inject constructor(
     private val authTokenRepository: AuthTokenRepository
 ) : ViewModel() {
 
-    // アプリ内ユーザー情報
+    /** アプリ内ユーザー情報 */
     var user by mutableStateOf<User?>(null)
         private set
 
-    // Firebaseログインユーザー情報
+    /** Firebase Authenticationのユーザー情報 */
     var firebaseUser by mutableStateOf<FirebaseUser?>(auth.currentUser)
         private set
 
-    // ログイン状態を判定する便利プロパティ
+    /** ログイン状態を簡単にチェックするためのプロパティ */
     val isLoggedIn: Boolean
         get() = firebaseUser != null
 
-    // 最後に取得した idToken（メモリ保持）
+    // 最後に取得したidToken（メモリキャッシュ）
     private var lastIdToken: String? = null
 
+    // IDトークンをメモリとデータベースに保存
     fun saveIdToken(token: String) {
         lastIdToken = token
         firebaseUser?.uid?.let { uid ->
             viewModelScope.launch {
-                authTokenRepository.saveToken(uid, token) // DBに保存
+                authTokenRepository.saveToken(uid, token) // DBにも保存
             }
         }
     }
 
+    //データベースからIDトークンを読み込む
     suspend fun loadIdToken(): String? {
         val uid = firebaseUser?.uid ?: return null
         return authTokenRepository.getToken(uid)
     }
 
-    // ダイアログ表示フラグ
+    // --- ダイアログ表示状態 --- //
     var showUserInputDialog by mutableStateOf(false)
         private set
     var showUserEditDialog by mutableStateOf(false)
@@ -63,36 +65,37 @@ class TopViewModel @Inject constructor(
         private set
 
     init {
-        // FirebaseAuth の状態変化を監視
+        // FirebaseAuthの認証状態の変更を監視
         auth.addAuthStateListener { firebaseAuth ->
             firebaseUser = firebaseAuth.currentUser
         }
 
+        // ユーザー情報をDBからロード。なければ入力ダイアログを表示
         viewModelScope.launch {
             try {
                 val result = userRepository.getUser()
                 if (result != null) {
                     user = result
                 } else {
-                    showUserInputDialog = true
+                    showUserInputDialog = true // ユーザー情報がない場合
                 }
             } catch (e: Exception) {
-                showUserInputDialog = true
+                showUserInputDialog = true // エラー時
             }
         }
     }
 
-    // ユーザー登録
+    //ユーザー情報をデータベースに登録
     fun registerUser(user: User) {
         viewModelScope.launch {
             userRepository.insertUser(user)
             this@TopViewModel.user = user
             showUserInputDialog = false
-            showAiAssistDialog = true
+            showAiAssistDialog = true // 登録後にAI支援ダイアログを表示
         }
     }
 
-    // ユーザー更新
+    //ユーザー情報を更新
     fun updateUser(lastName: String, firstName: String, lastNameRuby: String, firstNameRuby: String) {
         val current = user ?: return
         val updated = current.copy(
@@ -108,26 +111,26 @@ class TopViewModel @Inject constructor(
         }
     }
 
-    // ダイアログ制御
+    // --- ダイアログ制御 --- //
     fun showEditDialog() { showUserEditDialog = true }
     fun dismissEditDialog() { showUserEditDialog = false }
     fun dismissDialog() { showUserInputDialog = false }
     fun openAiAssistDialog() { showAiAssistDialog = true }
     fun dismissAiAssistDialog() { showAiAssistDialog = false }
 
-    // Googleログイン処理
+    // GoogleのIDトークンを使用してFirebaseにログイン/
     fun loginWithGoogle(idToken: String, onSuccess: () -> Unit, onError: (Exception) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
             .addOnSuccessListener {
                 Log.d("TopViewModel", "Google login success")
 
-                // FirebaseAuth から最新の ID トークンを取得
+                // ログイン成功後、Firebaseから最新のIDトークンを強制的に再取得
                 auth.currentUser?.getIdToken(true)
                     ?.addOnSuccessListener { result ->
                         val freshToken = result.token
                         if (freshToken != null) {
-                            saveIdToken(freshToken) // 最新トークンを保存（DBにも）
+                            saveIdToken(freshToken) // 最新トークンを保存
                             Log.d("TopViewModel", "Saved latest idToken")
                         }
                         onSuccess()
@@ -144,19 +147,19 @@ class TopViewModel @Inject constructor(
     }
 
 
-    // ログアウト処理（DBからも削除）
+    // ログアウト処理。Firebaseからのサインアウトと、DBに保存したIDトークンの削除/
     fun logout(onSuccess: () -> Unit) {
         val uid = firebaseUser?.uid
         auth.signOut()
         firebaseUser = null
-        user = null
+        user = null // アプリ内ユーザー情報もクリア
         viewModelScope.launch {
-            uid?.let { authTokenRepository.deleteToken(it) } // 👈 ログアウト時に削除
+            uid?.let { authTokenRepository.deleteToken(it) } // DBからトークンを削除
         }
         onSuccess()
     }
 
-    // 新しいトーク作成
+    // 新しいトークを作成する
     fun createNewTalk(title: String, onCreated: (Int) -> Unit) {
         viewModelScope.launch {
             val talkId = talksRepository.createTalk()

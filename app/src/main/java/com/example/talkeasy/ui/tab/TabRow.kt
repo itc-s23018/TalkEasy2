@@ -22,12 +22,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.talkeasy.R
 
+// カスタムデザインのタブメニューを表示するUI
 @Composable
 fun TabRowView(
     modifier: Modifier = Modifier,
     tabIndex: Int,
     onTabChange: (Int) -> Unit = {}
 ) {
+
     val icons = listOf(R.drawable.top, R.drawable.chat)
 
     Surface(
@@ -42,6 +44,7 @@ fun TabRowView(
             indicator = { },
             divider = { }
         ) {
+            // アイコンリストを元にタブを生成
             icons.forEachIndexed { index, icon ->
                 Tab(
                     selected = tabIndex == index,

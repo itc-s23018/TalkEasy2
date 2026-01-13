@@ -18,6 +18,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
+// アプリの主要な画面（トップ、トーク一覧）をタブで切り替えるためのコンテナ画面
 @Composable
 fun TabRowScreen(
     modifier: Modifier = Modifier,
@@ -27,17 +28,22 @@ fun TabRowScreen(
     onLoginClick: () -> Unit
 ) {
     val navController = LocalNavController.current
+    // 現在選択されているタブのインデックスを保持する状態変数
     var tabIndex by remember { mutableStateOf(initialTabIndex) }
+
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
 
     var drawerOpen by remember { mutableStateOf(false) }
 
     val vm: TopViewModel = hiltViewModel()
     val showAiAssistDialog = vm.showAiAssistDialog
 
+    // 画面全体のレイアウト
     Box(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        // タブのインデックスに応じて表示する画面を切り替える
         when (tabIndex) {
             0 -> TopScreen(
                 snackbarHostState = snackbarHostState,
@@ -71,14 +77,13 @@ fun TabRowScreen(
 
         if (showAiAssistDialog) {
             if (vm.isLoggedIn) {
-                // ログイン済み → AIアシスト利用可能
                 AI_AssistDialog(
                     userEmail = vm.firebaseUser?.email,
                     userName = vm.firebaseUser?.displayName,
                     userPhotoUrl = vm.firebaseUser?.photoUrl?.toString(),
                     isLoggedIn = true,
                     onDismiss = { vm.dismissAiAssistDialog() },
-                    onLoginClick = { /* すでにログイン済みなので何もしない */ },
+                    onLoginClick = {  },
                     onLogoutClick = {
                         vm.logout {
                             coroutineScope.launch {
@@ -88,7 +93,6 @@ fun TabRowScreen(
                     }
                 )
             } else {
-                // 未ログイン → ログインを促す
                 AI_AssistDialog(
                     userEmail = null,
                     userName = null,
@@ -96,7 +100,7 @@ fun TabRowScreen(
                     isLoggedIn = false,
                     onDismiss = { vm.dismissAiAssistDialog() },
                     onLoginClick = { onLoginClick() },
-                    onLogoutClick = { /* 未ログインなので何もしない */ }
+                    onLogoutClick = { /* 未ログインのため何もしない */ }
                 )
             }
         }

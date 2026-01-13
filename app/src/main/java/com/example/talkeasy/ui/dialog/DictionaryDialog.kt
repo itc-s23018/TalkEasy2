@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.talkeasy.data.entity.Words
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
-import com.example.talkeasy.gemini.GeminiWord
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import kotlinx.coroutines.launch
 

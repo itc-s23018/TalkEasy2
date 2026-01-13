@@ -26,7 +26,6 @@ import com.example.talkeasy.data.entity.InputType
 import com.example.talkeasy.data.viewmodel.CategoryViewModel
 import com.example.talkeasy.data.viewmodel.TalksViewModel
 import com.example.talkeasy.data.viewmodel.TopViewModel
-import com.example.talkeasy.gemini.GeminiWord
 import com.example.talkeasy.ui.viewmodel.WordsViewModel
 import com.example.talkeasy.ui.LocalNavController
 import com.example.talkeasy.ui.component.MessageBubble

@@ -6,6 +6,7 @@ data class GeminiResponse(
     val uid: String,
     val data: Map<String, Any?>
 ) {
+    //レスポンスから修正されたテキストを抽出
     fun extractCorrectedText(): String? {
         val candidates = data["candidates"] as? List<*> ?: return null
         val firstCandidate = candidates.firstOrNull() as? Map<*, *> ?: return null
@@ -15,6 +16,7 @@ data class GeminiResponse(
         return firstPart["text"] as? String
     }
 
+    //レスポンスから返信の提案を抽出
     fun extractReplySuggestions(): List<String> {
         val candidates = data["candidates"] as? List<*> ?: return emptyList()
         val texts = candidates.mapNotNull { candidate ->
@@ -31,7 +33,7 @@ data class GeminiResponse(
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .map { line ->
-                line.replace(Regex("^((返答\\s*\\d+\\s*:)|(-|•|\\*|\\d+\\.|#+)\\s*)"), "")
+                line.replace(Regex("^((返答\\s*\\d+\\s*:)|(-|•|\\*|\\d+\\.#+)\\s*)"), "")
                     .trim()
             }
             .filterNot { it.contains("返答の提案") || it.contains("出力仕様") }
@@ -39,6 +41,7 @@ data class GeminiResponse(
             .take(3)
     }
 
+    //レスポンスから単語のリストを抽出
     fun extractWords(): List<Words> {
         val candidates = data["candidates"] as? List<*> ?: return emptyList()
         val firstCandidate = candidates.firstOrNull() as? Map<*, *> ?: return emptyList()

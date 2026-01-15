@@ -88,10 +88,14 @@ class TopViewModel @Inject constructor(
     //ユーザー情報をデータベースに登録
     fun registerUser(user: User) {
         viewModelScope.launch {
-            userRepository.insertUser(user)
-            this@TopViewModel.user = user
-            showUserInputDialog = false
-            showAiAssistDialog = true // 登録後にAI支援ダイアログを表示
+            try {
+                userRepository.insertUser(user)
+                this@TopViewModel.user = user
+                showUserInputDialog = false
+                showAiAssistDialog = true // 登録後にAI支援ダイアログを表示
+            } catch (e: Exception) {
+                Log.e("TopViewModel", "Error inserting user", e)
+            }
         }
     }
 
